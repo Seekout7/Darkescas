@@ -1,0 +1,39 @@
+name: Build APK
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Create Android project files
+        run: flutter create --platforms=android --org com.karanlikpizzaci .
+
+      - name: Add network permissions
+        run: |
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />' android/app/src/main/AndroidManifest.xml
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
