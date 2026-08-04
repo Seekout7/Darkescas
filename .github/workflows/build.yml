@@ -12,22 +12,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+
+      - name: Flutter doctor
+        run: flutter doctor -v
+
+      - name: Accept Android licenses
+        run: yes | flutter doctor --android-licenses || true
 
       - name: Create Android project files
         run: flutter create --platforms=android --org com.karanlikpizzaci .
 
       - name: Add network permissions
         run: |
-          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
-          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />' android/app/src/main/AndroidManifest.xml
-          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml || true
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />' android/app/src/main/AndroidManifest.xml || true
+          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />' android/app/src/main/AndroidManifest.xml || true
 
       - name: Get dependencies
         run: flutter pub get
+
+      - name: Analyze (hataları göster)
+        run: flutter analyze --no-pub || true
 
       - name: Build APK
         run: flutter build apk --release
