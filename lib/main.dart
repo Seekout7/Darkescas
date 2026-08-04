@@ -14,7 +14,7 @@ class GameApp extends StatelessWidget {
     return MaterialApp(
       title: 'Darkescas',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(useMaterial3: false),
+      theme: ThemeData.dark(),
       home: const GameScreen(),
     );
   }
@@ -1325,14 +1325,16 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF050508),
-      body: SafeArea(child: Builder(builder: (_) {
-        if (page == 0) return _menu();
-        if (page == 1) return _discover();
-        if (page == 2) return _lobby();
-        if (page == 3) return _game();
-        return _end();
-      })),
+      body: ColoredBox(
+        color: const Color(0xFF050508),
+        child: SafeArea(child: Builder(builder: (_) {
+          if (page == 0) return _menu();
+          if (page == 1) return _discover();
+          if (page == 2) return _lobby();
+          if (page == 3) return _game();
+          return _end();
+        })),
+      ),
     );
   }
 
