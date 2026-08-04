@@ -1,47 +1,23 @@
 name: Build APK
-
 on:
   push:
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-
-      - name: Setup Flutter (sabit sürüm)
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           flutter-version: 3.24.5
           channel: stable
-
-      - name: Flutter doctor
-        run: flutter doctor -v
-
-      - name: Accept Android licenses
-        run: yes | flutter doctor --android-licenses || true
-
-      - name: Create Android project files
-        run: flutter create --platforms=android --org com.karanlikpizzaci --project-name darkescas .
-
-      - name: Add network permissions
-        run: |
-          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml || true
-          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />' android/app/src/main/AndroidManifest.xml || true
-          sed -i '/<manifest/a \    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />' android/app/src/main/AndroidManifest.xml || true
-
-      - name: Get dependencies
-        run: flutter pub get
-
+      - run: yes | flutter doctor --android-licenses || true
+      - run: flutter create --platforms=android --org com.karanlikpizzaci --project-name darkescas .
+      - run: flutter pub get
       - name: Build APK (hatayı alta yaz)
         run: |
           flutter build apk --release 2>&1 | tee build.log
@@ -50,9 +26,7 @@ jobs:
             grep -iE "error|failed|exception" build.log | tail -n 40
             exit 1
           fi
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: game-apk
           path: build/app/outputs/flutter-apk/app-release.apk
