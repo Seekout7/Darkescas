@@ -20,7 +20,6 @@ class GameApp extends StatelessWidget {
   }
 }
 
-// ============================= GRAFİK KALİTESİ =============================
 enum Quality { low, medium, high }
 
 class GQ {
@@ -59,7 +58,6 @@ class GQ {
   }
 }
 
-// ============================= MODELLER =============================
 class Endpoint {
   final InternetAddress address;
   final int port;
@@ -186,7 +184,6 @@ class Particle {
       : maxLife = life;
 }
 
-// ============================= ANA EKRAN =============================
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
   @override
@@ -259,7 +256,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   void dispose() {
     _ticker?.dispose();
     slowTimer?.cancel();
-    try { sock?.close(); } catch (_) {}
+    try {
+      sock?.close();
+    } catch (_) {}
     ipCtrl.dispose();
     super.dispose();
   }
@@ -276,7 +275,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     ui();
   }
 
-  // ============================= AĞ =============================
   Future<bool> startHostSocket() async {
     _closeNet();
     try {
@@ -304,7 +302,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   }
 
   void _closeNet() {
-    try { sock?.close(); } catch (_) {}
+    try {
+      sock?.close();
+    } catch (_) {}
     sock = null;
   }
 
@@ -326,7 +326,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   }
 
   void _send(Map<String, dynamic> d, InternetAddress a, int port) {
-    try { sock?.send(utf8.encode(jsonEncode(d)), a, port); } catch (_) {}
+    try {
+      sock?.send(utf8.encode(jsonEncode(d)), a, port);
+    } catch (_) {}
   }
 
   void _toHost(Map<String, dynamic> d) {
@@ -374,8 +376,14 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     PlayerNet? pl = _player(id);
     if (pl != null) pl.lastSeen = nowSec();
     if (t == "ping") return;
-    if (t == "leave") { _removePlayer(id); return; }
-    if (t == "char" && page == 2) { _hostSelectChar(id, gi(p["c"])); return; }
+    if (t == "leave") {
+      _removePlayer(id);
+      return;
+    }
+    if (t == "char" && page == 2) {
+      _hostSelectChar(id, gi(p["c"]));
+      return;
+    }
     if (t == "state" && page == 3 && pl != null && pl.role == 1 && pl.alive) {
       pl.x = gd(p["x"]);
       pl.y = gd(p["y"]);
@@ -403,7 +411,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       ui();
       return;
     }
-    if (t == "welcome") { myId = gi(p["id"]); page = 2; status = "Lobidesin."; ui(); return; }
+    if (t == "welcome") {
+      myId = gi(p["id"]);
+      page = 2;
+      status = "Lobidesin.";
+      ui();
+      return;
+    }
     if (t == "lobby") {
       players.clear();
       currentMap = gi(p["map"]);
@@ -418,16 +432,39 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       if (page == 2) ui();
       return;
     }
-    if (t == "start") { _startFromPayload(p); return; }
-    if (t == "snap") { _applySnap(p); return; }
-    if (t == "over") { _endLocal(gi(p["w"]), gs(p["m"])); return; }
-    if (t == "err") { status = gs(p["m"]); page = 0; _closeNet(); ui(); return; }
-    if (t == "closed") { _closeNet(); page = 0; status = "Host kapattı."; ui(); return; }
+    if (t == "start") {
+      _startFromPayload(p);
+      return;
+    }
+    if (t == "snap") {
+      _applySnap(p);
+      return;
+    }
+    if (t == "over") {
+      _endLocal(gi(p["w"]), gs(p["m"]));
+      return;
+    }
+    if (t == "err") {
+      status = gs(p["m"]);
+      page = 0;
+      _closeNet();
+      ui();
+      return;
+    }
+    if (t == "closed") {
+      _closeNet();
+      page = 0;
+      status = "Host kapattı.";
+      ui();
+      return;
+    }
   }
 
-  // ============================= MENÜ / LOBİ =============================
   Future<void> hostGame() async {
-    if (!await startHostSocket()) { ui(); return; }
+    if (!await startHostSocket()) {
+      ui();
+      return;
+    }
     isHost = true;
     myId = 0;
     guardId = -1;
@@ -446,7 +483,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   }
 
   Future<void> openDiscovery() async {
-    if (!await startClientSocket()) { ui(); return; }
+    if (!await startClientSocket()) {
+      ui();
+      return;
+    }
     isHost = false;
     myId = -1;
     discovered.clear();
@@ -457,14 +497,25 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   }
 
   void _sendDiscover() {
-    try { _send({"t": "discover"}, InternetAddress("255.255.255.255"), netPort); } catch (_) {}
+    try {
+      _send({"t": "discover"}, InternetAddress("255.255.255.255"), netPort);
+    } catch (_) {}
   }
 
   Future<void> joinIp() async {
     InternetAddress? a;
-    try { a = InternetAddress(ipCtrl.text.trim()); } catch (_) {}
-    if (a == null) { status = "Geçerli IP gir."; ui(); return; }
-    if (!await startClientSocket()) { ui(); return; }
+    try {
+      a = InternetAddress(ipCtrl.text.trim());
+    } catch (_) {}
+    if (a == null) {
+      status = "Geçerli IP gir.";
+      ui();
+      return;
+    }
+    if (!await startClientSocket()) {
+      ui();
+      return;
+    }
     isHost = false;
     myId = -1;
     hostAddr = a;
@@ -522,7 +573,11 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     PlayerNet? pl = _player(pid);
     if (pl == null) return;
     for (var o in players) {
-      if (o.id != pid && o.charId == c) { status = "Bu karakter seçili."; _broadcastLobby(); return; }
+      if (o.id != pid && o.charId == c) {
+        status = "Bu karakter seçili.";
+        _broadcastLobby();
+        return;
+      }
     }
     pl.charId = c;
     status = "${chars[c].name} seçildi.";
@@ -531,7 +586,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   void _setMap(int m) {
     if (!isHost || page != 2) return;
-    currentMap = m.clamp(0, 1);
+    currentMap = (m < 0) ? 0 : (m > 1 ? 1 : m);
     _broadcastLobby();
   }
 
@@ -542,9 +597,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     ui();
   }
 
-  // ============================= OYUN BAŞLAT =============================
   void _startHost() {
-    if (!isHost || page != 2 || players.length < 2) { status = "En az 2 oyuncu."; ui(); return; }
+    if (!isHost || page != 2 || players.length < 2) {
+      status = "En az 2 oyuncu.";
+      ui();
+      return;
+    }
     activeMap = makeMap(currentMap);
     _resetVars();
     List<int> ids = players.map((e) => e.id).toList();
@@ -575,7 +633,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       p.silentUntil = 0;
       p.lightUntil = 0;
       p.ventProgress = 0;
-      if (p.id == myId) { myRole = p.role; myChar = p.charId; localPos = Offset(p.x, p.y); myInside = p.insideOffice; }
+      if (p.id == myId) {
+        myRole = p.role;
+        myChar = p.charId;
+        localPos = Offset(p.x, p.y);
+        myInside = p.insideOffice;
+      }
     }
     ais.clear();
     int aiId = -100;
@@ -672,7 +735,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     _ticker = createTicker(_tick)..start();
   }
 
-  // ============================= DÖNGÜ =============================
   void _tick(Duration d) {
     if (page != 3) return;
     const double dt = 1.0 / 60.0;
@@ -689,20 +751,33 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     jumpscare = max(0.0, jumpscare - dt);
     _frame.value++;
     _hudAccum += dt;
-    if (_hudAccum > 0.1) { _hudAccum = 0; ui(); }
+    if (_hudAccum > 0.1) {
+      _hudAccum = 0;
+      ui();
+    }
   }
 
   void slowTick(Timer t) {
     double now = nowSec();
     if (page == 1) {
-      if (now - lastDiscovery > 2) { lastDiscovery = now; _sendDiscover(); }
+      if (now - lastDiscovery > 2) {
+        lastDiscovery = now;
+        _sendDiscover();
+      }
       int b = discovered.length;
       discovered.removeWhere((d) => now - d.last > 6);
       if (b != discovered.length) ui();
     }
     if (!isHost && (page == 2 || page == 3)) {
-      if (now - lastHostPacket > 10) { status = "Bağlantı koptu."; returnMenu(); return; }
-      if (now - lastPing > 2) { lastPing = now; _toHost({"t": "ping"}); }
+      if (now - lastHostPacket > 10) {
+        status = "Bağlantı koptu.";
+        returnMenu();
+        return;
+      }
+      if (now - lastPing > 2) {
+        lastPing = now;
+        _toHost({"t": "ping"});
+      }
     }
     if (isHost && page == 2 && now - lastLobby > 2) _broadcastLobby();
     if (isHost && (page == 2 || page == 3)) {
@@ -736,8 +811,14 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     }
     if (blackout) energy = 0;
     _updateAI(dt);
-    if (gameTime >= nightDuration) { _endGame(1, "Güvenlik sabaha kadar dayandı."); return; }
-    if (!players.any((p) => p.role == 1 && p.alive)) { _endGame(1, "Animatronik kalmadı."); return; }
+    if (gameTime >= nightDuration) {
+      _endGame(1, "Güvenlik sabaha kadar dayandı.");
+      return;
+    }
+    if (!players.any((p) => p.role == 1 && p.alive)) {
+      _endGame(1, "Animatronik kalmadı.");
+      return;
+    }
     PlayerNet? me = _player(myId);
     if (me != null) {
       myInside = me.insideOffice;
@@ -745,7 +826,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       myBoost = me.boostUntil > gameTime;
     }
     double now = nowSec();
-    if (now - lastSnap > 0.1) { lastSnap = now; _broadcastSnap(); }
+    if (now - lastSnap > 0.1) {
+      lastSnap = now;
+      _broadcastSnap();
+    }
   }
 
   void _updateAI(double dt) {
@@ -793,7 +877,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     }
     if (isHost) {
       PlayerNet? me = _player(myId);
-      if (me != null) { me.x = localPos.dx; me.y = localPos.dy; me.moving = localMoving; me.roomId = _roomAt(localPos); }
+      if (me != null) {
+        me.x = localPos.dx;
+        me.y = localPos.dy;
+        me.moving = localMoving;
+        me.roomId = _roomAt(localPos);
+      }
     }
   }
 
@@ -813,7 +902,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     _toHost({"t": "state", "p": {"x": localPos.dx, "y": localPos.dy, "mv": localMoving}});
   }
 
-  // ============================= AKSİYONLAR =============================
   void _guardAct(String a) {
     if (page != 3 || myRole != 0 || winner != 0) return;
     if (isHost) _handleAction(myId, a); else _toHost({"t": "act", "p": {"a": a}});
@@ -845,7 +933,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     PlayerNet? p = _player(id);
     if (p == null || !p.alive) return;
     p.lastSeen = nowSec();
-    if (id == guardId) { _guardAction(a); return; }
+    if (id == guardId) {
+      _guardAction(a);
+      return;
+    }
     if (p.role != 1 || p.charId < 0 || p.charId >= chars.length) return;
     CharDef c = chars[p.charId];
     if (a == "ability") {
@@ -862,9 +953,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   void _guardAction(String a) {
     if (blackout || ctrlLock > gameTime) return;
-    if (a == "doorL" && forcedL <= gameTime) { leftDoorClosed = !leftDoorClosed; dmgL = 0; }
-    else if (a == "doorR" && forcedR <= gameTime) { rightDoorClosed = !rightDoorClosed; dmgR = 0; }
-    else if (a == "flash") flashOn = !flashOn;
+    if (a == "doorL" && forcedL <= gameTime) {
+      leftDoorClosed = !leftDoorClosed;
+      dmgL = 0;
+    } else if (a == "doorR" && forcedR <= gameTime) {
+      rightDoorClosed = !rightDoorClosed;
+      dmgR = 0;
+    } else if (a == "flash") flashOn = !flashOn;
     else if (a == "cam") camOn = !camOn;
   }
 
@@ -880,7 +975,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     p.x = in.dx;
     p.y = in.dy;
     _burst(in, Colors.red, 14);
-    if (p.id == myId) { myInside = true; localPos = in; }
+    if (p.id == myId) {
+      myInside = true;
+      localPos = in;
+    }
   }
 
   void _force(PlayerNet p, int side, CharDef c) {
@@ -895,10 +993,18 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     shake = max(shake, 0.5);
     if (side == 0) {
       dmgL += dmg;
-      if (dmgL >= 100) { dmgL = 0; leftDoorClosed = false; forcedL = gameTime + 5; }
+      if (dmgL >= 100) {
+        dmgL = 0;
+        leftDoorClosed = false;
+        forcedL = gameTime + 5;
+      }
     } else {
       dmgR += dmg;
-      if (dmgR >= 100) { dmgR = 0; rightDoorClosed = false; forcedR = gameTime + 5; }
+      if (dmgR >= 100) {
+        dmgR = 0;
+        rightDoorClosed = false;
+        forcedR = gameTime + 5;
+      }
     }
   }
 
@@ -914,7 +1020,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       p.x = activeMap!.insideVent.dx;
       p.y = activeMap!.insideVent.dy;
       _burst(activeMap!.insideVent, Colors.yellow, 12);
-      if (p.id == myId) { myInside = true; localPos = Offset(p.x, p.y); }
+      if (p.id == myId) {
+        myInside = true;
+        localPos = Offset(p.x, p.y);
+      }
     }
   }
 
@@ -931,7 +1040,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       p.roomId = _roomAt(out);
       p.cooldownUntil = max(p.cooldownUntil, gameTime + 2);
       _burst(out, Colors.blue, 12);
-      if (p.id == myId) { myInside = false; localPos = out; }
+      if (p.id == myId) {
+        myInside = false;
+        localPos = out;
+      }
     } else {
       jumpscare = 1.2;
       shake = 1.5;
@@ -949,30 +1061,57 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   void _applyActive(PlayerNet p, CharDef c) {
     if (activeMap == null) return;
-    if (c.active == "speed") { p.boostUntil = gameTime + 4; }
-    else if (c.active == "dash") {
+    if (c.active == "speed") {
+      p.boostUntil = gameTime + 4;
+    } else if (c.active == "dash") {
       Offset d = activeMap!.office.center - Offset(p.x, p.y);
       if (d.distance > 0.1) {
         Offset t = Offset(p.x, p.y) + (d / d.distance) * 4;
-        if (_walkableFor(t, p)) { p.x = t.dx; p.y = t.dy; _burst(t, c.color, 10); if (p.id == myId) localPos = t; }
+        if (_walkableFor(t, p)) {
+          p.x = t.dx;
+          p.y = t.dy;
+          _burst(t, c.color, 10);
+          if (p.id == myId) localPos = t;
+        }
       }
-    } else if (c.active == "camjam") { camJam = gameTime + 5; }
-    else if (c.active == "doorbreak") {
-      if ((Offset(p.x, p.y) - activeMap!.leftDoor).distance < 3.5) { leftDoorClosed = false; forcedL = gameTime + 5; _burst(activeMap!.leftDoor, Colors.orange, 16); }
-      else if ((Offset(p.x, p.y) - activeMap!.rightDoor).distance < 3.5) { rightDoorClosed = false; forcedR = gameTime + 5; _burst(activeMap!.rightDoor, Colors.orange, 16); }
+    } else if (c.active == "camjam") {
+      camJam = gameTime + 5;
+    } else if (c.active == "doorbreak") {
+      if ((Offset(p.x, p.y) - activeMap!.leftDoor).distance < 3.5) {
+        leftDoorClosed = false;
+        forcedL = gameTime + 5;
+        _burst(activeMap!.leftDoor, Colors.orange, 16);
+      } else if ((Offset(p.x, p.y) - activeMap!.rightDoor).distance < 3.5) {
+        rightDoorClosed = false;
+        forcedR = gameTime + 5;
+        _burst(activeMap!.rightDoor, Colors.orange, 16);
+      }
     } else if (c.active == "ventrush") {
       if ((Offset(p.x, p.y) - activeMap!.vent).distance < 3.5) {
-        p.insideOffice = true; p.entrySide = 2; p.roomId = -2;
-        p.x = activeMap!.insideVent.dx; p.y = activeMap!.insideVent.dy;
-        if (p.id == myId) { myInside = true; localPos = Offset(p.x, p.y); }
+        p.insideOffice = true;
+        p.entrySide = 2;
+        p.roomId = -2;
+        p.x = activeMap!.insideVent.dx;
+        p.y = activeMap!.insideVent.dy;
+        if (p.id == myId) {
+          myInside = true;
+          localPos = Offset(p.x, p.y);
+        }
       }
     } else if (c.active == "drain") {
       if ((Offset(p.x, p.y) - activeMap!.office.center).distance < 10) energy = max(0.0, energy - 10);
-    } else if (c.active == "lightimmune") { p.lightUntil = gameTime + 5; }
-    else if (c.active == "silent") { p.silentUntil = gameTime + 5; }
-    else if (c.active == "noise") {
-      if (activeMap!.rooms.isNotEmpty) { noiseRoom = rnd.nextInt(activeMap!.rooms.length); noiseUntil = gameTime + 3; }
-    } else if (c.active == "fear") { ctrlLock = gameTime + 3; }
+    } else if (c.active == "lightimmune") {
+      p.lightUntil = gameTime + 5;
+    } else if (c.active == "silent") {
+      p.silentUntil = gameTime + 5;
+    } else if (c.active == "noise") {
+      if (activeMap!.rooms.isNotEmpty) {
+        noiseRoom = rnd.nextInt(activeMap!.rooms.length);
+        noiseUntil = gameTime + 3;
+      }
+    } else if (c.active == "fear") {
+      ctrlLock = gameTime + 3;
+    }
   }
 
   bool _walkableFor(Offset pos, PlayerNet p) {
@@ -984,7 +1123,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     return false;
   }
 
-  // ============================= SNAPSHOT / BİTİŞ =============================
   void _broadcastSnap() {
     if (!isHost || page != 3) return;
     List<Map<String, dynamic>> ents = [];
@@ -1017,7 +1155,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     guardId = gi(p["g"]);
     noiseRoom = gi(p["nr"]);
     noiseUntil = gd(p["nu"]);
-    if (gi(p["w"]) > 0) { _endLocal(gi(p["w"]), gs(p["m"])); return; }
+    if (gi(p["w"]) > 0) {
+      _endLocal(gi(p["w"]), gs(p["m"]));
+      return;
+    }
     remote.clear();
     if (p["ents"] is List) {
       for (var it in (p["ents"] as List)) {
@@ -1066,11 +1207,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     }
     players.removeWhere((p) => p.id == id);
     endpoints.remove(id);
-    if (page == 2) { status = "Oyuncu ayrıldı."; _broadcastLobby(); }
-    else if (page == 3 && !players.any((p) => p.role == 1 && p.alive)) _endGame(1, "Animatronik kalmadı.");
+    if (page == 2) {
+      status = "Oyuncu ayrıldı.";
+      _broadcastLobby();
+    } else if (page == 3 && !players.any((p) => p.role == 1 && p.alive)) _endGame(1, "Animatronik kalmadı.");
   }
 
-  // ============================= PARÇACIKLAR =============================
   void _burst(Offset pos, Color color, int count) {
     if (!_particlesOn || q.particleCap == 0) return;
     int n = min(count, q.particleCap - particles.length);
@@ -1093,7 +1235,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     }
   }
 
-  // ============================= GEOMETRİ =============================
   PlayerNet? _player(int id) {
     for (var p in players) if (p.id == id) return p;
     return null;
@@ -1178,7 +1319,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     return "0$h:00";
   }
 
-  // ============================= UI =============================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1202,11 +1342,14 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     _btn("HOST OL", hostGame),
     _btn("OYUN BUL", openDiscovery),
     TextField(controller: ipCtrl, keyboardType: TextInputType.number, style: const TextStyle(fontSize: 18),
-      decoration: InputDecoration(hintText: "192.168.1.x", filled: true, fillColor: Colors.grey[900], border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+        decoration: InputDecoration(hintText: "192.168.1.x", filled: true, fillColor: Colors.grey[900], border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
     const SizedBox(height: 10),
     _btn("IP İLE KATIL", joinIp),
     const SizedBox(height: 10),
-    _btn("GRAFİK AYARLARI", () { _showSettings = true; ui(); }),
+    _btn("GRAFİK AYARLARI", () {
+      _showSettings = true;
+      ui();
+    }),
     const SizedBox(height: 16),
     Text("Kalite: ${_qName()}", style: const TextStyle(color: Colors.white70)),
     const Expanded(child: SizedBox()),
@@ -1241,7 +1384,9 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       const SizedBox(height: 8),
       Expanded(child: ListView.builder(itemCount: chars.length, itemBuilder: (c, i) {
         bool me = false, other = false;
-        for (var p in players) if (p.charId == i) { if (p.id == myId) me = true; else other = true; }
+        for (var p in players) if (p.charId == i) {
+          if (p.id == myId) me = true; else other = true;
+        }
         Color bg = Colors.grey[850]!;
         if (me) bg = Colors.green[800]!;
         if (other) bg = Colors.red[900]!;
@@ -1259,13 +1404,16 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     if (camJam > gameTime) top += " | PARAZİT!";
     if (views.any((v) => v.role == 1 && v.inside)) top += " | OFİSTE BİRİ VAR!";
     return Stack(children: [
-      ValueListenableBuilder<int>(valueListenable: _frame, builder: (c, f, w) => Positioned.fill(child: CustomPaint(painter: GamePainter(
-        map: activeMap, entities: views, q: q, particles: _particlesOn ? particles : const <Particle>[],
-        shake: shake, jumpscare: jumpscare, myRole: myRole, localPos: localPos, flashOn: flashOn, blackout: blackout,
-        leftClosed: leftDoorClosed, rightClosed: rightDoorClosed, camActive: camActive && myRole == 0, rnd: rnd, gameTime: gameTime)))),
+      Positioned.fill(child: ValueListenableBuilder<int>(valueListenable: _frame, builder: (c, f, w) => CustomPaint(painter: GamePainter(
+          map: activeMap, entities: views, q: q, particles: _particlesOn ? particles : const <Particle>[],
+          shake: shake, jumpscare: jumpscare, myRole: myRole, localPos: localPos, flashOn: flashOn, blackout: blackout,
+          leftClosed: leftDoorClosed, rightClosed: rightDoorClosed, camActive: camActive && myRole == 0, rnd: rnd, gameTime: gameTime)))),
       Positioned(top: 8, left: 8, right: 8, child: Container(padding: const EdgeInsets.all(8), color: Colors.black54, child: Row(children: [
         Expanded(child: Text(top, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14))),
-        IconButton(icon: const Icon(Icons.settings, size: 20), onPressed: () { _showSettings = true; ui(); }),
+        IconButton(icon: const Icon(Icons.settings, size: 20), onPressed: () {
+          _showSettings = true;
+          ui();
+        }),
       ]))),
       if (camActive && myRole == 0) _camOverlay(),
       if (myRole == 0) _guardBar(),
@@ -1281,7 +1429,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       const SizedBox(height: 4),
       Expanded(child: Text(_detected(), style: const TextStyle(color: Color(0xFF66FF66)))),
       SizedBox(height: 56, child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: activeMap!.rooms.length, itemBuilder: (c, i) =>
-        Padding(padding: const EdgeInsets.only(right: 6), child: _btn(activeMap!.rooms[i].name, () { selectedCamRoom = i; ui(); }, bg: selectedCamRoom == i ? Colors.green[900] : Colors.black, small: true)))),
+          Padding(padding: const EdgeInsets.only(right: 6), child: _btn(activeMap!.rooms[i].name, () {
+            selectedCamRoom = i;
+            ui();
+          }, bg: selectedCamRoom == i ? Colors.green[900] : Colors.black, small: true)))),
     ])));
   }
 
@@ -1295,28 +1446,34 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     Expanded(child: _btn("KAMERA", () => _guardAct("cam"), bg: camOn ? Colors.blue[900] : Colors.grey[850], small: true)),
   ]));
 
-  Widget _animControls() {
+  Widget _animControls() => Positioned.fill(child: Stack(children: [
+    Positioned(left: 20, bottom: 20, child: _joystick()),
+    Positioned(right: 20, bottom: 110, width: 170, height: 64, child: _btn(myCooldown > 0 ? "YETENEK ${myCooldown.ceil()}s" : "YETENEK", _ability, bg: myCooldown <= 0 ? Colors.purple[800] : Colors.grey[850], enabled: myCooldown <= 0, small: true)),
+    Positioned(right: 20, bottom: 30, width: 170, height: 64, child: _btn(_contextLabel(), _interact, bg: _context() == "none" ? Colors.grey[850] : Colors.orange[900], enabled: _context() != "none", small: true)),
+  ]));
+
+  String _contextLabel() {
     String a = _context();
-    String label = "ETKİLEŞİM YOK";
-    if (a == "attack") label = "SALDIR!";
-    else if (a == "enterL") label = "SOLDAN SIZ";
-    else if (a == "enterR") label = "SAĞDAN SIZ";
-    else if (a == "forceL") label = "SOL ZORLA";
-    else if (a == "forceR") label = "SAĞ ZORLA";
-    else if (a == "vent") label = "HAVALANDIRMA";
-    return Stack(children: [
-      Positioned(left: 20, bottom: 20, child: _joystick()),
-      Positioned(right: 20, bottom: 110, width: 170, height: 64, child: _btn(myCooldown > 0 ? "YETENEK ${myCooldown.ceil()}s" : "YETENEK", _ability, bg: myCooldown <= 0 ? Colors.purple[800] : Colors.grey[850], enabled: myCooldown <= 0, small: true)),
-      Positioned(right: 20, bottom: 30, width: 170, height: 64, child: _btn(label, _interact, bg: a == "none" ? Colors.grey[850] : Colors.orange[900], enabled: a != "none", small: true)),
-    ]);
+    if (a == "attack") return "SALDIR!";
+    if (a == "enterL") return "SOLDAN SIZ";
+    if (a == "enterR") return "SAĞDAN SIZ";
+    if (a == "forceL") return "SOL ZORLA";
+    if (a == "forceR") return "SAĞ ZORLA";
+    if (a == "vent") return "HAVALANDIRMA";
+    return "ETKİLEŞİM YOK";
   }
 
   Widget _joystick() => GestureDetector(
-    onPanStart: (d) => _joy(d.localPosition),
-    onPanUpdate: (d) => _joy(d.localPosition),
-    onPanEnd: (_) { joyThumb = Offset.zero; joyX = 0; joyY = 0; ui(); },
-    child: Container(width: 150, height: 150, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white10, border: Border.all(color: Colors.white24)),
-      child: Stack(children: [Positioned(left: 75 + joyThumb.dx - 30, top: 75 + joyThumb.dy - 30, child: Container(width: 60, height: 60, decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white38)))])));
+      onPanStart: (d) => _joy(d.localPosition),
+      onPanUpdate: (d) => _joy(d.localPosition),
+      onPanEnd: (_) {
+        joyThumb = Offset.zero;
+        joyX = 0;
+        joyY = 0;
+        ui();
+      },
+      child: Container(width: 150, height: 150, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white10, border: Border.all(color: Colors.white24)),
+          child: Stack(children: [Positioned(left: 75 + joyThumb.dx - 30, top: 75 + joyThumb.dy - 30, child: Container(width: 60, height: 60, decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white38)))])));
 
   void _joy(Offset local) {
     Offset v = local - const Offset(75, 75);
@@ -1338,11 +1495,17 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       Expanded(child: _btn("Yüksek", () => setQuality(Quality.high), bg: quality == Quality.high ? Colors.teal : null, small: true)),
     ]),
     const SizedBox(height: 10),
-    _btn(_particlesOn ? "Parçacıklar: AÇIK" : "Parçacıklar: KAPALI", () { _particlesOn = !_particlesOn; ui(); }, small: true),
+    _btn(_particlesOn ? "Parçacıklar: AÇIK" : "Parçacıklar: KAPALI", () {
+      _particlesOn = !_particlesOn;
+      ui();
+    }, small: true),
     const SizedBox(height: 8),
     Text("Kalite: ${_qName()}", style: const TextStyle(color: Colors.white60)),
     const SizedBox(height: 12),
-    _btn("KAPAT", () { _showSettings = false; ui(); }),
+    _btn("KAPAT", () {
+      _showSettings = false;
+      ui();
+    }),
   ]))));
 
   String _qName() => quality == Quality.low ? "Düşük" : quality == Quality.medium ? "Orta" : "Yüksek";
@@ -1362,11 +1525,10 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   }
 
   Widget _btn(String text, VoidCallback on, {Color? bg, bool enabled = true, bool small = false}) => ElevatedButton(
-    onPressed: enabled ? on : null,
-    style: ElevatedButton.styleFrom(backgroundColor: bg ?? Colors.grey[850], disabledBackgroundColor: Colors.grey[900]),
-    child: Padding(padding: EdgeInsets.all(small ? 8 : 12), child: Text(text, textAlign: TextAlign.center, style: TextStyle(fontSize: small ? 13 : 18))));
+      onPressed: enabled ? on : null,
+      style: ElevatedButton.styleFrom(backgroundColor: bg ?? Colors.grey[850], disabledBackgroundColor: Colors.grey[900]),
+      child: Padding(padding: EdgeInsets.all(small ? 8 : 12), child: Text(text, textAlign: TextAlign.center, style: TextStyle(fontSize: small ? 13 : 18))));
 
-  // ============================= VERİ =============================
   List<CharDef> makeChars() => [
     CharDef(name: "Volti", color: const Color(0xFF3CC8FF), speed: 3.4, cooldown: 12, active: "speed", passive: "speed"),
     CharDef(name: "Griz", color: const Color(0xFFBE5A32), speed: 3.1, cooldown: 18, active: "doorbreak", passive: "door"),
@@ -1392,21 +1554,21 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   MapDef makeMap(int id) {
     if (id == 1) return MapDef(name: "Yeni Pizzacı", office: Rect.fromLTWH(17, 18, 6, 4),
-      leftDoor: const Offset(16.3, 19.5), rightDoor: const Offset(23.7, 19.5), vent: const Offset(20, 17.5),
-      insideLeft: const Offset(18, 20), insideRight: const Offset(22, 20), insideVent: const Offset(20, 19),
-      rooms: [Room("Ana Salon", Rect.fromLTWH(16, 14, 8, 15)), Room("Sol Koridor", Rect.fromLTWH(10, 18, 7, 6)),
-        Room("Sağ Koridor", Rect.fromLTWH(23, 18, 7, 6)), Room("Yemek", Rect.fromLTWH(12, 4, 16, 11)),
-        Room("Sol Kanat", Rect.fromLTWH(8, 10, 10, 4)), Room("Sağ Kanat", Rect.fromLTWH(22, 10, 10, 4)),
-        Room("Parça Servis", Rect.fromLTWH(2, 10, 7, 8)), Room("Ödül Köşesi", Rect.fromLTWH(31, 10, 7, 8)),
-        Room("Oyun Alanı", Rect.fromLTWH(14, 0, 12, 5))]);
+        leftDoor: const Offset(16.3, 19.5), rightDoor: const Offset(23.7, 19.5), vent: const Offset(20, 17.5),
+        insideLeft: const Offset(18, 20), insideRight: const Offset(22, 20), insideVent: const Offset(20, 19),
+        rooms: [Room("Ana Salon", Rect.fromLTWH(16, 14, 8, 15)), Room("Sol Koridor", Rect.fromLTWH(10, 18, 7, 6)),
+          Room("Sağ Koridor", Rect.fromLTWH(23, 18, 7, 6)), Room("Yemek", Rect.fromLTWH(12, 4, 16, 11)),
+          Room("Sol Kanat", Rect.fromLTWH(8, 10, 10, 4)), Room("Sağ Kanat", Rect.fromLTWH(22, 10, 10, 4)),
+          Room("Parça Servis", Rect.fromLTWH(2, 10, 7, 8)), Room("Ödül Köşesi", Rect.fromLTWH(31, 10, 7, 8)),
+          Room("Oyun Alanı", Rect.fromLTWH(14, 0, 12, 5))]);
     return MapDef(name: "Eski Pizzacı", office: Rect.fromLTWH(17, 34, 6, 4),
-      leftDoor: const Offset(16.3, 35.5), rightDoor: const Offset(23.7, 35.5), vent: const Offset(20, 33),
-      insideLeft: const Offset(18, 36), insideRight: const Offset(22, 36), insideVent: const Offset(20, 35),
-      rooms: [Room("Sahne", Rect.fromLTWH(16, 0, 8, 6)), Room("Yemek", Rect.fromLTWH(12, 5, 16, 15)),
-        Room("Sol Koridor", Rect.fromLTWH(10, 18, 8, 18)), Room("Sağ Koridor", Rect.fromLTWH(22, 18, 8, 18)),
-        Room("Ana Koridor", Rect.fromLTWH(16, 30, 8, 4)), Room("Backstage", Rect.fromLTWH(4, 18, 7, 8)),
-        Room("Mutfak", Rect.fromLTWH(29, 18, 7, 8)), Room("Tuvalet", Rect.fromLTWH(4, 28, 7, 8)),
-        Room("Depo", Rect.fromLTWH(29, 28, 7, 8))]);
+        leftDoor: const Offset(16.3, 35.5), rightDoor: const Offset(23.7, 35.5), vent: const Offset(20, 33),
+        insideLeft: const Offset(18, 36), insideRight: const Offset(22, 36), insideVent: const Offset(20, 35),
+        rooms: [Room("Sahne", Rect.fromLTWH(16, 0, 8, 6)), Room("Yemek", Rect.fromLTWH(12, 5, 16, 15)),
+          Room("Sol Koridor", Rect.fromLTWH(10, 18, 8, 18)), Room("Sağ Koridor", Rect.fromLTWH(22, 18, 8, 18)),
+          Room("Ana Koridor", Rect.fromLTWH(16, 30, 8, 4)), Room("Backstage", Rect.fromLTWH(4, 18, 7, 8)),
+          Room("Mutfak", Rect.fromLTWH(29, 18, 7, 8)), Room("Tuvalet", Rect.fromLTWH(4, 28, 7, 8)),
+          Room("Depo", Rect.fromLTWH(29, 28, 7, 8))]);
   }
 
   int gi(dynamic v) => v is num ? v.toInt() : 0;
@@ -1415,7 +1577,6 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   String gs(dynamic v) => v?.toString() ?? "";
 }
 
-// ============================= GELİŞMİŞ ÇİZİCİ =============================
 class GamePainter extends CustomPainter {
   final MapDef? map;
   final List<EntityView> entities;
