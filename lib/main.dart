@@ -103,8 +103,10 @@ class AiNet {
   int roomId;
   double speed, nextThink;
   bool moving;
-  AiNet({required this.id, required this.charId, required this.x, required this.y, this.roomId = 0, this.speed = 1.0})
-      : tx = x,
+  AiNet({required this.id, required this.charId, required double x, required double y, this.roomId = 0, this.speed = 1.0})
+      : this.x = x,
+        this.y = y,
+        tx = x,
         ty = y,
         nextThink = 0,
         moving = false;
@@ -180,8 +182,9 @@ class DiscoveredHost {
 class Particle {
   double x, y, vx, vy, life, maxLife, size;
   Color color;
-  Particle({required this.x, required this.y, required this.vx, required this.vy, required this.life, required this.size, required this.color})
-      : maxLife = life;
+  Particle({required this.x, required this.y, required this.vx, required this.vy, required double life, required this.size, required this.color})
+      : this.life = life,
+        maxLife = life;
 }
 
 class GameScreen extends StatefulWidget {
