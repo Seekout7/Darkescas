@@ -193,14 +193,14 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateMixin {
+class _GameScreenState extends State<GameScreen> {
   static const int netPort = 47777;
   static const double nightDuration = 240.0;
   static const int maxPlayers = 4;
 
   final Random rnd = Random();
   final TextEditingController ipCtrl = TextEditingController();
-  Ticker? _ticker;
+  Timer? _loop;
   final ValueNotifier<int> _frame = ValueNotifier<int>(0);
   double _hudAccum = 0;
 
@@ -257,7 +257,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   @override
   void dispose() {
-    _ticker?.dispose();
+    _loop?.cancel();
     slowTimer?.cancel();
     try {
       sock?.close();
@@ -546,8 +546,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
 
   void returnMenu() {
     if (isHost) _toAll({"t": "closed"}); else _toHost({"t": "leave"});
-    _ticker?.dispose();
-    _ticker = null;
+    _loop?.cancel();
+    _loop = null;
     _closeNet();
     isHost = false;
     page = 0;
@@ -658,7 +658,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       "ais": ais.map((a) => {"id": a.id, "char": a.charId, "x": a.x, "y": a.y}).toList(),
     }});
     page = 3;
-    _startTicker();
+    _startLoop();
     ui();
   }
 
@@ -701,7 +701,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
       }
     }
     page = 3;
-    _startTicker();
+    _startLoop();
     ui();
   }
 
@@ -733,12 +733,12 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     jumpscare = 0;
   }
 
-  void _startTicker() {
-    _ticker?.dispose();
-    _ticker = createTicker(_tick)..start();
+  void _startLoop() {
+    _loop?.cancel();
+    _loop = Timer.periodic(const Duration(milliseconds: 16), _tick);
   }
 
-  void _tick(Duration d) {
+  void _tick(Timer t) {
     if (page != 3) return;
     const double dt = 1.0 / 60.0;
     if (winner == 0) {
@@ -1195,8 +1195,8 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     winner = w;
     endMsg = m;
     page = 4;
-    _ticker?.dispose();
-    _ticker = null;
+    _loop?.cancel();
+    _loop = null;
     ui();
   }
 
