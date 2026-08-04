@@ -31,7 +31,7 @@ jobs:
         run: yes | flutter doctor --android-licenses || true
 
       - name: Create Android project files
-        run: flutter create --platforms=android --org com.karanlikpizzaci .
+        run: flutter create --platforms=android --org com.karanlikpizzaci --project-name darkescas .
 
       - name: Add network permissions
         run: |
