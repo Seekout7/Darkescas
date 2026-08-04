@@ -42,8 +42,14 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Build APK (hatayı alta yaz)
+        run: |
+          flutter build apk --release 2>&1 | tee build.log
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "================ GERCEK HATA ================"
+            grep -iE "error|failed|exception" build.log | tail -n 40
+            exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
