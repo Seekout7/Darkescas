@@ -974,13 +974,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     p.insideOffice = true;
     p.entrySide = side;
     p.roomId = -2;
-    Offset in = side == 0 ? activeMap!.insideLeft : activeMap!.insideRight;
-    p.x = in.dx;
-    p.y = in.dy;
-    _burst(in, Colors.red, 14);
+    Offset inside = side == 0 ? activeMap!.insideLeft : activeMap!.insideRight;
+    p.x = inside.dx;
+    p.y = inside.dy;
+    _burst(inside, Colors.red, 14);
     if (p.id == myId) {
       myInside = true;
-      localPos = in;
+      localPos = inside;
     }
   }
 
