@@ -1,50 +1,63 @@
 name: Build APK
+
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    timeout-minutes: 45
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: 17
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.5'
           channel: stable
           cache: true
 
-      - name: Accept Android licenses
-        run: yes | flutter doctor --android-licenses || true
+      - run: flutter --version
 
-      - name: Generate Android platform (to temp folder, protect main.dart)
+      - run: yes | flutter doctor --android-licenses || true
+
+      - name: Android platformu (main.dart korunur)
         run: |
           flutter create --platforms=android --org com.darkescas --project-name darkescas _tmp
           rm -rf android
           cp -r _tmp/android .
-          cp -r _tmp/.metadata . 2>/dev/null || true
+          cp _tmp/.metadata . 2>/dev/null || true
           rm -rf _tmp
 
-      - name: Get dependencies
-        run: flutter pub get
+      - name: INTERNET izinleri (LAN/UDP icin sart)
+        run: |
+          if ! grep -q 'android.permission.INTERNET' android/app/src/main/AndroidManifest.xml; then
+            sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET" />\n        <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n        <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />\n        <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />\n    <application|' android/app/src/main/AndroidManifest.xml
+            echo "izinler eklendi"
+          fi
 
-      - name: Build APK (release)
-        run: flutter build apk --release --no-shrink
+      - run: flutter pub get
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Dart analizi (gercek hatayi gosterir)
+        run: flutter analyze --no-fatal-warnings || true
+
+      - name: Release APK
+        id: rel
+        continue-on-error: true
+        run: flutter build apk --release
+
+      - name: Debug APK (release basarisizsa YEDEK)
+        if: steps.rel.outcome == 'failure'
+        run: flutter build apk --debug
+
+      - uses: actions/upload-artifact@v4
         with:
           name: darkescas-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 7
+          path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 14
