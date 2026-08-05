@@ -114,8 +114,7 @@ class CD {
   final Color color;
   final double sp, cd;
 
-  CD(this.n, int c, this.sp, this.cd, this.act, this.pas)
-      : color = Color(c);
+  CD(this.n, int c, this.sp, this.cd, this.act, this.pas) : color = Color(c);
 }
 
 class DH {
@@ -151,10 +150,7 @@ double gd(dynamic v) {
 bool gb(dynamic v) => v == true;
 
 String sanitizeName(String raw) {
-  final clean = raw
-      .replaceAll(RegExp(r'[\u0000-\u001F\u007F]'), '')
-      .trim();
-
+  final clean = raw.replaceAll(RegExp(r'[\u0000-\u001F\u007F]'), '').trim();
   if (clean.isEmpty) return 'Oyuncu';
   return clean.length <= 16 ? clean : clean.substring(0, 16);
 }
@@ -176,7 +172,7 @@ List<CD> mkChars() {
 
 MD mkMap(int i) {
   if (i == 1) {
-    final of = Rect.fromLTWH(-25, -20, 50, 40);
+    final Rect of = Rect.fromLTWH(-25, -20, 50, 40);
     return MD(
       'Depo',
       of,
@@ -197,7 +193,7 @@ MD mkMap(int i) {
     );
   }
 
-  final of = Rect.fromLTWH(-20, -15, 40, 30);
+  final Rect of = Rect.fromLTWH(-20, -15, 40, 30);
   return MD(
     'Ofis',
     of,
@@ -240,8 +236,6 @@ class _S extends State<GS> {
   final fr = ValueNotifier<int>(0);
 
   Quality quality = Quality.medium;
-  late GQ q = GQ.of(quality);
-  bool showSet = false;
 
   int page = 0;
   int myId = -1;
@@ -301,7 +295,6 @@ class _S extends State<GS> {
   bool myB = false;
   double myCd = 0;
 
-  Offset jt = Offset.zero;
   double jx = 0;
   double jy = 0;
   double shake = 0;
@@ -321,11 +314,9 @@ class _S extends State<GS> {
     loop?.cancel();
     slow?.cancel();
     _sub?.cancel();
-
     try {
       sock?.close();
     } catch (_) {}
-
     ipc.dispose();
     nameC.dispose();
     fr.dispose();
@@ -340,7 +331,6 @@ class _S extends State<GS> {
 
   void setQ(Quality v) {
     quality = v;
-    q = GQ.of(v);
     ui();
   }
 
@@ -507,8 +497,6 @@ class _S extends State<GS> {
       final target = Offset(nx, ny);
       final old = Offset(me.x, me.y);
 
-      // Basit anti-teleport:
-      // 10 Hz state + network jitter için toleranslı ama büyük sıçramaları reddeder.
       if ((target - old).distance <= 6.0 && walkF(target, me)) {
         me.x = nx;
         me.y = ny;
@@ -1735,11 +1723,11 @@ class _S extends State<GS> {
   }
 
   String clock() {
-    final progress = (gt / night).clamp(0.0, 1.0);
-    final totalMinutes = (progress * 24 * 60).toInt();
+    final double progress = (gt / night).clamp(0.0, 1.0).toDouble();
+    final int totalMinutes = (progress * 24 * 60).toInt();
 
-    final h = totalMinutes ~/ 60;
-    final m = totalMinutes % 60;
+    final int h = totalMinutes ~/ 60;
+    final int m = totalMinutes % 60;
 
     return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
   }
@@ -1753,10 +1741,10 @@ class _S extends State<GS> {
           PopupMenuButton<Quality>(
             initialValue: quality,
             onSelected: setQ,
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: Quality.low, child: Text('Düşük')),
-              PopupMenuItem(value: Quality.medium, child: Text('Orta')),
-              PopupMenuItem(value: Quality.high, child: Text('Yüksek')),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: Quality.low, child: Text('Düşük')),
+              const PopupMenuItem(value: Quality.medium, child: Text('Orta')),
+              const PopupMenuItem(value: Quality.high, child: Text('Yüksek')),
             ],
           ),
         ],
@@ -1891,8 +1879,7 @@ class _S extends State<GS> {
         ...pl.map((p) => ListTile(
               dense: true,
               leading: CircleAvatar(
-                backgroundColor:
-                    p.id == guard ? Colors.cyan : col(p.charId),
+                backgroundColor: p.id == guard ? Colors.cyan : col(p.charId),
                 child: Text('${p.id}'),
               ),
               title: Text(p.name),
@@ -1908,8 +1895,7 @@ class _S extends State<GS> {
           runSpacing: 8,
           children: chars.asMap().entries.map((e) {
             final i = e.key;
-            final taken =
-                pl.any((p) => p.id != myId && p.charId == i);
+            final taken = pl.any((p) => p.id != myId && p.charId == i);
 
             return ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -1965,7 +1951,8 @@ class _S extends State<GS> {
                 ..._playerWidgets(toScreen),
                 Positioned(top: 8, left: 8, right: 8, child: _hud()),
                 if (cam && myRole == 0)
-                  Positioned(top: 64, left: 8, right: 8, child: _cameraPanel(m)),
+                  Positioned(
+                      top: 64, left: 8, right: 8, child: _cameraPanel(m)),
                 Positioned(left: 16, bottom: 16, child: _joystick()),
                 Positioned(right: 16, bottom: 16, child: _actionButtons()),
               ],
@@ -2017,12 +2004,12 @@ class _S extends State<GS> {
 
   List<Widget> _playerWidgets(Offset Function(Offset) toScreen) {
     final list = views();
-    final visible = list
-        .where((v) => isHost || v.id == myId || !v.hid)
-        .toList();
+    final visible =
+        list.where((v) => isHost || v.id == myId || !v.hid).toList();
 
     return visible.map((v) {
       final p = toScreen(Offset(v.x, v.y));
+      final double top = p.dy - 12 - (v.id == myId ? jump * 6 : 0.0);
 
       Widget marker = Container(
         width: 24,
@@ -2048,11 +2035,7 @@ class _S extends State<GS> {
         marker = Opacity(opacity: 0.35, child: marker);
       }
 
-      return Positioned(
-        left: p.dx - 12,
-        top: p.dy - 12 - (v.id == myId ? jump * 6 : 0),
-        child: marker,
-      );
+      return Positioned(left: p.dx - 12, top: top, child: marker);
     }).toList();
   }
 
@@ -2090,8 +2073,7 @@ class _S extends State<GS> {
   Widget _cameraPanel(MD m) {
     if (m.rooms.isEmpty) return const SizedBox.shrink();
 
-    final val =
-        camRoom >= 0 && camRoom < m.rooms.length ? camRoom : 0;
+    final val = camRoom >= 0 && camRoom < m.rooms.length ? camRoom : 0;
 
     return Container(
       padding: const EdgeInsets.all(8),
