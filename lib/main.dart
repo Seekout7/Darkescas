@@ -24,6 +24,11 @@ class MD { final String n; final Rect of; final Offset ld, rd, vt, il, ir, iv; f
 class CD { final String n, act, pas; final Color color; final double sp, cd; CD(this.n, int c, this.sp, this.cd, this.act, this.pas) : color = Color(c); }
 class DH { final String a; final int p; String s; int c, m; double last; DH(this.a, this.p, this.s, this.c, this.m, this.last); }
 
+int gi(dynamic v) => v is num ? v.toInt() : 0;
+double gd(dynamic v) => v is num ? v.toDouble() : 0.0;
+bool gb(dynamic v) => v == true;
+String gs(dynamic v) => v?.toString() ?? "";
+
 class GS extends StatefulWidget { const GS({super.key}); @override State<GS> createState() => _S(); }
 
 class _S extends State<GS> {
@@ -202,34 +207,4 @@ class _S extends State<GS> {
 
   void snap(Map p) { if (page != 3) return; gt = gd(p["t"]); en = gd(p["e"]); ldC = gb(p["ld"]); rdC = gb(p["rd"]); fl = gb(p["fl"]); cam = gb(p["cam"]); jam = gt + gd(p["jam"]); black = gb(p["black"]); guard = gi(p["g"]); nR = gi(p["nr"]); nU = gd(p["nu"]);
     if (gi(p["w"]) > 0) { endL(gi(p["w"]), gs(p["m"])); return; } rem.clear();
-    if (p["ents"] is List) for (var it in p["ents"]) { var e = (it as Map).cast<String, dynamic>(); int id = gi(e["id"]);
-      if (id == myId) { myIn = gb(e["io"]); myCd = gd(e["cd"]); myB = gb(e["sp"]); var hp = Offset(gd(e["x"]), gd(e["y"])); if ((pos - hp).distance > 5) pos = hp; continue; }
-      rem[id] = EV(id, gi(e["ch"]), gi(e["rl"]), gd(e["x"]), gd(e["y"]), gi(e["rm"]), gb(e["mv"]), gb(e["hid"]), gb(e["io"]), col(gi(e["ch"]))); }
-    tH = now(); }
-
-  void endG(int w, String m) { if (page != 3 || win != 0) return; win = w; toA({"t": "over", "p": {"w": w, "m": m}}); endL(w, m); }
-  void endL(int w, String m) { if (page == 4) return; win = w; endMsg = m; page = 4; loop?.cancel(); loop = null; ui(); }
-  void rmP(int id) { if (id == 0) return; if (page == 3 && id == guard) { pl.removeWhere((p) => p.id == id); eps.remove(id); endG(2, "Güvenlik ayrıldı"); return; }
-    pl.removeWhere((p) => p.id == id); eps.remove(id); if (page == 2) lob(); else if (page == 3 && !pl.any((p) => p.role == 1 && p.alive)) endG(1, "Kalmadı"); }
-
-  PN? getP(int id) { for (var p in pl) if (p.id == id) return p; return null; }
-  int roomAt(Offset o) { if (map == null) return -1; if (map!.of.contains(o)) return -2; for (int i = 0; i < map!.rooms.length; i++) if (map!.rooms[i].r.contains(o)) return i; return -1; }
-  Offset rndS() { if (map == null || map!.rooms.isEmpty) return const Offset(20, 20); var r = map!.rooms[rnd.nextInt(map!.rooms.length)].r;
-    double mx = min(1.0, r.width * 0.25), my = min(1.0, r.height * 0.25);
-    double x1 = r.left + mx, x2 = r.right - mx, y1 = r.top + my, y2 = r.bottom - my;
-    if (x2 < x1) x1 = x2 = r.center.dx; if (y2 < y1) y1 = y2 = r.center.dy;
-    return Offset(x1 + rnd.nextDouble() * (x2 - x1), y1 + rnd.nextDouble() * (y2 - y1)); }
-  int freeC(List<int> u) { for (int i = 0; i < 100; i++) { int c = rnd.nextInt(chars.length); if (!u.contains(c)) return c; } for (int c = 0; c < chars.length; c++) if (!u.contains(c)) return c; return 0; }
-  String cn(int id) => (id < 0 || id >= chars.length) ? "?" : chars[id].n;
-  Color col(int id) => (id < 0 || id >= chars.length) ? Colors.white : chars[id].color;
-
-  List<EV> views() { var v = <EV>[];
-    if (isHost) { for (var p in pl) { if (!p.alive) continue; bool hid = false; if (p.role == 1 && p.charId >= 0 && p.charId < chars.length) { if (p.silent > gt) hid = true; var pa = chars[p.charId].pas; if (pa == "quiet" || pa == "ghost") hid = true; }
-        v.add(EV(p.id, p.charId, p.role, p.x, p.y, p.room, p.mv, hid, p.inside, p.role == 0 ? Colors.cyan : col(p.charId))); } }
-    else { v.addAll(rem.values); if (myRole == 1) v.add(EV(myId, myChar, 1, pos.dx, pos.dy, roomAt(pos), mv, false, myIn, col(myChar))); }
-    return v; }
-
-  String det() { if (map == null || camRoom < 0 || camRoom >= map!.rooms.length) return ""; if (jam > gt) return "PARAZİT";
-    var n = <String>[]; for (var v in views()) if (v.role != 0 && !v.inside && v.room == camRoom && v.mv && !v.hid) n.add(cn(v.ch));
-    String t = ""; if (nR == camRoom && nU > gt) t += "SES!\n"; t += n.isEmpty ? "Temiz." : "Hareket: ${n.join(', ')}"; return t; }
-  String clock() { int h = ((gt / night).clamp(0.0, 1.0)
+    if (p["ents"] is List) for (var it in p["ents"]) { var e = (it as Map).cast<String, dynamic>(); int id = gi(e
