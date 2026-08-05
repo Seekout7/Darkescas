@@ -1,32 +1,50 @@
 name: Build APK
 on:
   push:
+    branches: [main]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
-      - uses: subosito/flutter-action@v2
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.24.5
+          flutter-version: '3.24.5'
           channel: stable
-      - run: yes | flutter doctor --android-licenses || true
-      - run: flutter create --platforms=android --org com.karanlikpizzaci --project-name darkescas .
-      - run: flutter pub get
-      - name: Build APK (hatayı alta yaz)
+          cache: true
+
+      - name: Accept Android licenses
+        run: yes | flutter doctor --android-licenses || true
+
+      - name: Generate Android platform (to temp folder, protect main.dart)
         run: |
-          flutter build apk --release 2>&1 | tee build.log
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then
-            echo "================ GERCEK HATA ================"
-            grep -iE "error|failed|exception" build.log | tail -n 40
-            exit 1
-          fi
-      - uses: actions/upload-artifact@v4
+          flutter create --platforms=android --org com.darkescas --project-name darkescas _tmp
+          rm -rf android
+          cp -r _tmp/android .
+          cp -r _tmp/.metadata . 2>/dev/null || true
+          rm -rf _tmp
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build APK (release)
+        run: flutter build apk --release --no-shrink
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: game-apk
+          name: darkescas-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
