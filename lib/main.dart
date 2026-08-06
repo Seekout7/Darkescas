@@ -1630,7 +1630,7 @@ names.add(cn(v.ch));
 }
 }
 String t = '';
-if (nR == camRoom && nU > gt) t += 'SES!\n';
+if (nR == camRoom && nU > gt) t += 'SES! ';
 t += names.isEmpty ? 'Temiz.' : 'Hareket: ${names.join(', ')}';
 return t;
 }
