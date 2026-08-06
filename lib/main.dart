@@ -156,6 +156,10 @@ String sanitizeName(String raw) {
   return clean.length <= 16 ? clean : clean.substring(0, 16);
 }
 
+int cr(Color c) => (c.r * 255.0).round().clamp(0, 255);
+int cg(Color c) => (c.g * 255.0).round().clamp(0, 255);
+int cb(Color c) => (c.b * 255.0).round().clamp(0, 255);
+
 String actDesc(String a) {
   switch (a) {
     case 'speed':
@@ -205,7 +209,7 @@ String pasDesc(String p) {
 List<CD> mkChars() {
   return [
     CD('Kanat', '🦅', 0xFFEF5350, 3.6, 10, 'speed', 'speed',
-        '1987'de sahne vinçine kilitlenen kuş maskotu... O geceden beri koridorlarda süzülüyor. En hızlı o.'),
+        '1987 yangınında sahne vincine kilitlenen kuş maskotu... O geceden beri koridorlarda süzülüyor. En hızlı o.'),
     CD('Gölge', '👻', 0xFF9575CD, 3.2, 14, 'silent', 'ghost',
         'Yangında kül olan kuklanın gölgesi. Kameralar onu asla kaydedemez; sadece hissedersin.'),
     CD('Fare', '🐭', 0xFF4DB6AC, 3.4, 12, 'ventrush', 'vent',
@@ -1887,9 +1891,9 @@ class _S extends State<GS> {
   Widget _animFace(Color color, double size, {bool glow = false}) {
     final Color light = Color.fromARGB(
         255,
-        min(255, color.red + 45),
-        min(255, color.green + 45),
-        min(255, color.blue + 45));
+        min(255, cr(color) + 45),
+        min(255, cg(color) + 45),
+        min(255, cb(color) + 45));
     final Color eye = glow ? const Color(0xFFFF2222) : Colors.white;
 
     return SizedBox(
@@ -1971,9 +1975,9 @@ class _S extends State<GS> {
     final double w = h * 0.55;
     final Color light = Color.fromARGB(
         255,
-        min(255, color.red + 60),
-        min(255, color.green + 60),
-        min(255, color.blue + 60));
+        min(255, cr(color) + 60),
+        min(255, cg(color) + 60),
+        min(255, cb(color) + 60));
 
     return SizedBox(
       width: w,
@@ -2067,7 +2071,7 @@ class _S extends State<GS> {
         decoration: BoxDecoration(
           color: disabled
               ? const Color(0xFF1A1A1A)
-              : Color.fromARGB(70, color.red, color.green, color.blue),
+              : Color.fromARGB(70, cr(color), cg(color), cb(color)),
           border: Border.all(
               color: disabled ? Colors.grey.shade800 : color, width: 2),
           borderRadius: BorderRadius.circular(8),
@@ -2158,13 +2162,13 @@ class _S extends State<GS> {
                       fontWeight: FontWeight.bold,
                       fontFamily: 'monospace')),
               SizedBox(height: 6),
-              Text('💂 Güvenlik: SADECE ofisi görürsün. Animatronikleri yalnızca KAMERADAN izlersin. Kapı ışığı + kapı + güç yönetimi. 6 AM\'e kadar dayan.',
+              Text('💂 Güvenlik: SADECE ofisi görürsün. Animatronikleri yalnızca KAMERADAN izlersin. Kapı ışığı + kapı + güç yönetimi. Saat 6 AM olana kadar dayan.',
                   style: TextStyle(fontSize: 11, color: Colors.white70)),
               SizedBox(height: 4),
               Text('🐻 Animatronik: kendi bölgende gezersin, ofise sızarsın, güvenliği yakalarsın.',
                   style: TextStyle(fontSize: 11, color: Colors.white70)),
               SizedBox(height: 4),
-              Text('🔋 Kapılar/ışık/kamera güç harcar. Güç biterse karanlık!',
+              Text('🔋 Kapılar, ışık ve kamera güç harcar. Güç biterse karanlık!',
                   style: TextStyle(fontSize: 11, color: Colors.white70)),
             ])),
         _card(TextField(
@@ -2177,7 +2181,7 @@ class _S extends State<GS> {
         )),
         _card(const Text('🖥️ HOST OL — odayı kur',
             style: TextStyle(color: Colors.white70)), onTap: () => hostGame()),
-        _card(const Text('📡 LOBİ ARA — aynı Wi-Fi\'deki hostlar',
+        _card(const Text('📡 LOBİ ARA — aynı Wi-Fi ağında hostlar',
             style: TextStyle(color: Colors.white70)), onTap: () => openDisc()),
         _card(
           Column(children: [
@@ -2185,7 +2189,7 @@ class _S extends State<GS> {
               controller: ipc,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
-                  labelText: 'Host IP (cihaz IP\'si)',
+                  labelText: 'Host IP (cihaz IP)',
                   labelStyle: TextStyle(color: Colors.grey),
                   hintText: '192.168.1.35'),
             ),
@@ -2338,8 +2342,8 @@ class _S extends State<GS> {
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                     color: sel
-                        ? Color.fromARGB(
-                            80, cd.color.red, cd.color.green, cd.color.blue)
+                        ? Color.fromARGB(80, cr(cd.color), cg(cd.color),
+                            cb(cd.color))
                         : const Color(0xFF101010),
                     border: Border.all(
                         color: sel
