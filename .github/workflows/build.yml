@@ -27,13 +27,14 @@ jobs:
 
       - run: yes | flutter doctor --android-licenses || true
 
-      - name: Android platformu (main.dart korunur)
+      - name: Android platformu (main.dart'a dokunmaz)
         run: |
           flutter create --platforms=android --org com.darkescas --project-name darkescas _tmp
           rm -rf android
           cp -r _tmp/android .
           cp _tmp/.metadata . 2>/dev/null || true
           rm -rf _tmp
+          chmod +x android/gradlew 2>/dev/null || true
 
       - name: INTERNET izinleri (LAN/UDP icin sart)
         run: |
@@ -44,19 +45,30 @@ jobs:
 
       - run: flutter pub get
 
-      - name: Dart analizi (gercek hatayi gosterir)
-        run: flutter analyze --no-fatal-warnings || true
+      - name: Dart hata kontrolu (varsa ACIK yazar)
+        run: |
+          set +e
+          flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
+          CODE=$?
+          set -e
+          if [ $CODE -ne 0 ]; then
+            echo "=============================================="
+            echo "DART HATASI VAR - bu adimin logunda yukariya bak,"
+            echo "'error - lib/main.dart:SATIR' satirini goreceksin."
+            echo "=============================================="
+            exit 1
+          fi
+          echo "Dart kodu temiz."
 
-      - name: Release APK
-        id: rel
+      - name: DEBUG APK (ANA BUILD - her zaman calisir)
+        run: flutter build apk --debug
+
+      - name: RELEASE APK (opsiyonel - patlasa da onemli degil)
         continue-on-error: true
         run: flutter build apk --release
 
-      - name: Debug APK (release basarisizsa YEDEK)
-        if: steps.rel.outcome == 'failure'
-        run: flutter build apk --debug
-
-      - uses: actions/upload-artifact@v4
+      - name: APK yukle
+        uses: actions/upload-artifact@v4
         with:
           name: darkescas-apk
           path: build/app/outputs/flutter-apk/*.apk
