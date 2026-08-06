@@ -1929,7 +1929,7 @@ class _S extends State<GS> {
 
     return ValueListenableBuilder<int>(
       valueListenable: fr,
-      builder: (context, _) {
+      builder: (context, _, __) {
         return LayoutBuilder(
           builder: (context, constraints) {
             final size = Size(constraints.maxWidth, constraints.maxHeight);
@@ -2087,7 +2087,6 @@ class _S extends State<GS> {
           const SizedBox(width: 8),
           DropdownButton<int>(
             value: val,
-            dense: true,
             items: m.rooms.asMap().entries
                 .map((e) => DropdownMenuItem<int>(
                       value: e.key,
