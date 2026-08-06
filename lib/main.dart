@@ -2265,7 +2265,7 @@ class _S extends State<GS> {
                 fontWeight: FontWeight.bold)),
         const Spacer(),
         if (myRole == 0)
-          Text('Kullanim: ${'I' * _usage()}',
+          Text("Kullanim: ${List.filled(_usage(), 'I').join()}",
               style: TextStyle(
                   color: powerColor, fontFamily: 'monospace', fontSize: 14)),
         if (myRole == 0) const SizedBox(width: 10),
