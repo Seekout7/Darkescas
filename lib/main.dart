@@ -349,10 +349,13 @@ class AnimPainter extends CustomPainter {
           .createShader(rect);
 
     final Paint flat = Paint();
-    final Paint soft = Paint()..maskFilter = MaskFilter.blur(BlurStyle.normal, 3);
+    final Paint soft = Paint()
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3);
     soft.color = const Color(0xAA000000);
 
-    canvas.drawEllipse(Offset(w / 2, h * 0.97), w * 0.34, h * 0.03, soft);
+    // GOLGE (drawEllipse YOK -> drawOval kullanilir)
+    canvas.drawOval(
+        Rect.fromLTWH(w * 0.16, h * 0.94, w * 0.68, h * 0.06), soft);
 
     flat.color = color;
 
@@ -405,8 +408,10 @@ class AnimPainter extends CustomPainter {
 
     if (kind == 0) {
       flat.color = const Color(0xFF111111);
-      canvas.drawRect(Rect.fromLTWH(w * 0.38, h * 0.01, w * 0.24, h * 0.07), flat);
-      canvas.drawRect(Rect.fromLTWH(w * 0.33, h * 0.075, w * 0.34, h * 0.02), flat);
+      canvas.drawRect(
+          Rect.fromLTWH(w * 0.38, h * 0.01, w * 0.24, h * 0.07), flat);
+      canvas.drawRect(
+          Rect.fromLTWH(w * 0.33, h * 0.075, w * 0.34, h * 0.02), flat);
     }
 
     final Rect headR = Rect.fromLTWH(w * 0.16, h * 0.08, w * 0.68, h * 0.26);
@@ -1221,8 +1226,13 @@ class _S extends State<GS> {
         'map': curMap,
         'guard': guard,
         'players': pl
-            .map((p) =>
-                {'id': p.id, 'char': p.charId, 'role': p.role, 'x': p.x, 'y': p.y})
+            .map((p) => {
+                  'id': p.id,
+                  'char': p.charId,
+                  'role': p.role,
+                  'x': p.x,
+                  'y': p.y
+                })
             .toList(),
       }
     });
@@ -2196,7 +2206,8 @@ class _S extends State<GS> {
                 'GUVENLIK: Sadece ofisi gorursun. Animatronikleri yalnizca KAMERADAN izlersin. Kapi isigi + kapi + guc yonetimi. Saat 6 AM olana kadar dayan.',
                 style: TextStyle(fontSize: 11, color: Colors.white70)),
             SizedBox(height: 4),
-            Text('ANIMATRONIK: Kendi bolgede gezersin, ofise sizarsin, guvenligi yakalarsin.',
+            Text(
+                'ANIMATRONIK: Kendi bolgende gezersin, ofise sizarsin, guvenligi yakalarsin.',
                 style: TextStyle(fontSize: 11, color: Colors.white70)),
             SizedBox(height: 4),
             Text('Kapi, isik ve kamera guc harcar. Guc biterse karanlik.',
@@ -2212,9 +2223,11 @@ class _S extends State<GS> {
           onChanged: (v) => myName = sanitizeName(v),
         )),
         _card(const Text('HOST OL - odayi kur',
-            style: TextStyle(color: Colors.white70)), onTap: () => hostGame()),
+            style: TextStyle(color: Colors.white70)),
+            onTap: () => hostGame()),
         _card(const Text('LOBI ARA - ayni Wi-Fi aginda hostlar',
-            style: TextStyle(color: Colors.white70)), onTap: () => openDisc()),
+            style: TextStyle(color: Colors.white70)),
+            onTap: () => openDisc()),
         _card(Column(children: [
           TextField(
             controller: ipc,
@@ -2326,8 +2339,7 @@ class _S extends State<GS> {
                             fontWeight: FontWeight.bold))
                     : (p.charId >= 0
                         ? _animBody(col(p.charId), 44, kind: kindOf(p.charId))
-                        : const Text('?',
-                            style: TextStyle(fontSize: 22))),
+                        : const Text('?', style: TextStyle(fontSize: 22))),
                 const SizedBox(width: 10),
                 Expanded(
                     child: Column(
@@ -2419,8 +2431,8 @@ class _S extends State<GS> {
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                       color: sel
-                          ? Color.fromARGB(80, cr(cd.color), cg(cd.color),
-                              cb(cd.color))
+                          ? Color.fromARGB(
+                              80, cr(cd.color), cg(cd.color), cb(cd.color))
                           : const Color(0xFF101010),
                       border: Border.all(
                           color: sel
@@ -2522,12 +2534,13 @@ class _S extends State<GS> {
         ),
         const SizedBox(height: 10),
         if (isHost)
-          _fnafButton('OYUNU BASLAT', Colors.green,
-              pl.length >= 2 ? startHost : null),
+          _fnafButton(
+              'OYUNU BASLAT', Colors.green, pl.length >= 2 ? startHost : null),
         if (status.isNotEmpty)
           Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text(status, style: const TextStyle(color: Colors.amber))),
+              child:
+                  Text(status, style: const TextStyle(color: Colors.amber))),
       ],
     );
   }
@@ -2659,7 +2672,8 @@ class _S extends State<GS> {
                 Transform.rotate(
                     angle: fr.value * 0.3,
                     child: const Text('*',
-                        style: TextStyle(fontSize: 30, color: Colors.white24))),
+                        style:
+                            TextStyle(fontSize: 30, color: Colors.white24))),
                 const SizedBox(width: 10),
                 Container(
                   width: 16,
@@ -2684,8 +2698,8 @@ class _S extends State<GS> {
                       letterSpacing: 6)),
               if (black)
                 const Text('GUC BITTI - KARANLIKTASIN',
-                    style:
-                        TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                        color: Colors.red, fontWeight: FontWeight.bold)),
             ]))),
         Positioned(
             left: 6,
@@ -2731,8 +2745,8 @@ class _S extends State<GS> {
         if (cam) _camView(),
         Positioned.fill(
             child: IgnorePointer(
-                child: CustomPaint(
-                    painter: NoisePainter(fr.value ~/ 3, 0.35)))),
+                child:
+                    CustomPaint(painter: NoisePainter(fr.value ~/ 3, 0.35)))),
       ]);
     });
   }
@@ -2767,8 +2781,7 @@ class _S extends State<GS> {
                       ? _animBody(const Color(0xFF1A1A1A), 110,
                           glow: true, kind: 1)
                       : (fl
-                          ? const Text('-',
-                              style: TextStyle(fontSize: 20))
+                          ? const Text('-', style: TextStyle(fontSize: 20))
                           : const Text('.',
                               style: TextStyle(color: Colors.white24)))),
             ),
@@ -2932,12 +2945,13 @@ class _S extends State<GS> {
                   child: IgnorePointer(
                       child: Container(
                           decoration: const BoxDecoration(
-                              gradient: RadialGradient(
-                                  colors: [
+                              gradient: RadialGradient(colors: [
                     Color(0x00000000),
                     Color(0xAA000000)
-                  ],
-                                  stops: [0.55, 1.0]))))),
+                  ], stops: [
+                    0.55,
+                    1.0
+                  ]))))),
               Positioned.fill(
                   child: CustomPaint(
                       painter: NoisePainter(fr.value ~/ 2, 1.0))),
@@ -2975,8 +2989,8 @@ class _S extends State<GS> {
         Positioned(right: 12, bottom: 12, child: _actionButtons()),
         Positioned.fill(
             child: IgnorePointer(
-                child: CustomPaint(
-                    painter: NoisePainter(fr.value ~/ 4, 0.2)))),
+                child:
+                    CustomPaint(painter: NoisePainter(fr.value ~/ 4, 0.2)))),
       ]);
     });
   }
@@ -3167,8 +3181,7 @@ class _S extends State<GS> {
           Center(
               child: Transform.scale(
                   scale: 1.0 + jump * 0.5,
-                  child:
-                      _animBody(const Color(0xFF3B0000), 300, glow: true))),
+                  child: _animBody(const Color(0xFF3B0000), 300, glow: true))),
           const Positioned(
               bottom: 40,
               left: 0,
