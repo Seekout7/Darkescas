@@ -1,4 +1,4 @@
-// DOSYA BASI
+// SURUM 6 - TEK DOSYA. BASKA KOD KALMASIN.
 // lib/main.dart - GECE VARDIYASI (LAN + TEK KISILIK YZ)
 import 'dart:async';
 import 'dart:convert';
@@ -286,9 +286,7 @@ class Sfx {
         await p.exitCode;
       } catch (_) {}
       _live.remove('amb');
-      await Future<void>.delayed(
-        const Duration(milliseconds: 200),
-      );
+      await Future<void>.delayed(const Duration(milliseconds: 200));
     }
   }
 
@@ -358,8 +356,7 @@ class Sfx {
       final saw = 2 * ((t * f) % 1) - 1;
       final nz = r.nextDouble() * 2 - 1;
       final gr = ((t * 92) % 1) > 0.5 ? 1.0 : -1.0;
-      final env = m.min(1.0, t / 0.04) *
-          m.pow(1 - p, 0.7).toDouble();
+      final env = m.min(1.0, t / 0.04) * m.pow(1 - p, 0.7).toDouble();
       var v = saw * 0.5 + nz * 0.35 + gr * 0.25;
       v = _tanh(2.6 * v) * env * 0.85;
       out[i] = v;
@@ -386,8 +383,7 @@ class Sfx {
         final st = 1.0 + k * 3.8;
         if (t > st && t < st + 3.2) {
           final dt2 = t - st;
-          v += m.sin(2 * m.pi * notes[k % 4] * dt2) *
-              0.16 * m.exp(-dt2 * 1.4);
+          v += m.sin(2 * m.pi * notes[k % 4] * dt2) * 0.16 * m.exp(-dt2 * 1.4);
         }
       }
       var fade = 1.0;
@@ -824,12 +820,7 @@ class Net extends ChangeNotifier {
 
   List<Map<String, dynamic>> _lobbyList() {
     return players.values.map((p) {
-      return {
-        'p': p.pid,
-        'n': p.name,
-        's': p.sel,
-        'h': p.pid == hostPid
-      };
+      return {'p': p.pid, 'n': p.name, 's': p.sel, 'h': p.pid == hostPid};
     }).toList();
   }
 
@@ -938,10 +929,11 @@ class Net extends ChangeNotifier {
   void _sendDiscover() {
     try {
       final b = InternetAddress('255.255.255.255');
-      sock?.send(utf8.encode(jsonEncode({
-        't': 'discover',
-        'n': myName
-      })), b, kPort);
+      sock?.send(
+        utf8.encode(jsonEncode({'t': 'discover', 'n': myName})),
+        b,
+        kPort,
+      );
     } catch (_) {}
     final now = DateTime.now().millisecondsSinceEpoch;
     found.removeWhere((k, v) => now - v.ts > 5000);
@@ -966,8 +958,7 @@ class Net extends ChangeNotifier {
       }
       if (page == 3 && !over && !isHost && myRole == 'A') {
         if (hostAddr != null) {
-          _sendTo({'t': 'state', 'jx': _jx, 'jy': _jy},
-              hostAddr!, hostPort);
+          _sendTo({'t': 'state', 'jx': _jx, 'jy': _jy}, hostAddr!, hostPort);
         }
       }
     });
@@ -1015,7 +1006,7 @@ class Net extends ChangeNotifier {
         final key = '${ad.address}:$po';
         final now = DateTime.now().millisecondsSinceEpoch;
         found[key] = HostInfo(
-          _s(j['hn']), _i(j['mp']), _i(j['pc']), ad, po, now);
+            _s(j['hn']), _i(j['mp']), _i(j['pc']), ad, po, now);
         status = '${found.length} oda bulundu';
         notifyListeners();
       }
@@ -1102,7 +1093,7 @@ class Net extends ChangeNotifier {
     if (list is List) {
       for (final p in list) {
         rows.add(PRow(
-          _i(p['p']), _s(p['n']), _s(p['s']), _i(p['h']) == 1));
+            _i(p['p']), _s(p['n']), _s(p['s']), _i(p['h']) == 1));
       }
     }
   }
@@ -1225,8 +1216,7 @@ class Net extends ChangeNotifier {
     if (isHost) {
       _applyAct(myPid, 'pick', sel);
     } else if (hostAddr != null) {
-      _sendTo({'t': 'act', 'k': 'pick', 'v': sel},
-          hostAddr!, hostPort);
+      _sendTo({'t': 'act', 'k': 'pick', 'v': sel}, hostAddr!, hostPort);
     }
   }
 
@@ -1345,8 +1335,7 @@ class Net extends ChangeNotifier {
     evQ.clear();
     actors.clear();
     final spawns = curMap.nodes
-        .where((n) => n.id != 'O' && n.id != 'L' &&
-            n.id != 'R' && n.id != 'U')
+        .where((n) => n.id != 'O' && n.id != 'L' && n.id != 'R' && n.id != 'U')
         .toList();
     spawns.shuffle(_r);
     int si = 0;
@@ -1511,8 +1500,7 @@ class Net extends ChangeNotifier {
             final na = nodeById[a.node]!;
             final nb = nodeById[other]!;
             final len = _len(a.node, other);
-            final dot = ((nb.x - na.x) / len) * ix +
-                ((nb.y - na.y) / len) * iy;
+            final dot = ((nb.x - na.x) / len) * ix + ((nb.y - na.y) / len) * iy;
             if (dot > bestDot) {
               bestDot = dot;
               best = other;
@@ -1568,8 +1556,7 @@ class Net extends ChangeNotifier {
     final nid = side == 'L' ? 'L' : 'R';
     for (final a in actors.values) {
       if (a.eB == null) continue;
-      final hit = (a.eA == nid && a.eB == 'O') ||
-          (a.eA == 'O' && a.eB == nid);
+      final hit = (a.eA == nid && a.eB == 'O') || (a.eA == 'O' && a.eB == nid);
       if (hit) _slam(a);
     }
   }
@@ -1775,8 +1762,7 @@ class Net extends ChangeNotifier {
               .toList();
           if (other.isNotEmpty) {
             if (pid != hostPid) {
-              _sendTo({'t': 'err', 'm': 'Guvenlik zaten secildi'},
-                  p.addr, p.port);
+              _sendTo({'t': 'err', 'm': 'Guvenlik zaten secildi'}, p.addr, p.port);
             }
             return;
           }
@@ -1825,8 +1811,7 @@ class Net extends ChangeNotifier {
         if (!ventOpen) {
           for (final a in actors.values) {
             if (a.eB == null) continue;
-            final hit = (a.eA == 'U' && a.eB == 'O') ||
-                (a.eA == 'O' && a.eB == 'U');
+            final hit = (a.eA == 'U' && a.eB == 'O') || (a.eA == 'O' && a.eB == 'U');
             if (hit) _slam(a);
           }
         }
@@ -2060,9 +2045,7 @@ class Net extends ChangeNotifier {
     _onOver(side, reason, js, killer, surprise);
   }
 
-  void _onOver(
-    String side, String reason, int js, int killer, bool sp,
-  ) {
+  void _onOver(String side, String reason, int js, int killer, bool sp) {
     over = true;
     overSide = side;
     overReason = reason;
@@ -2116,12 +2099,8 @@ class Net extends ChangeNotifier {
     vf.waitL = _waitAt('L');
     vf.waitR = _waitAt('R');
     for (final a in actors.values) {
-      if (a.forcing == 'L') {
-        vf.forceL = m.max(vf.forceL, a.forceT / 2.6);
-      }
-      if (a.forcing == 'R') {
-        vf.forceR = m.max(vf.forceR, a.forceT / 2.6);
-      }
+      if (a.forcing == 'L') vf.forceL = m.max(vf.forceL, a.forceT / 2.6);
+      if (a.forcing == 'R') vf.forceR = m.max(vf.forceR, a.forceT / 2.6);
     }
     vf.ddL = m.max(0.0, dlDis - sT);
     vf.ddR = m.max(0.0, drDis - sT);
@@ -2269,8 +2248,7 @@ class Net extends ChangeNotifier {
     if (isHost) {
       _applyAct(myPid, 'ctx', label);
     } else if (hostAddr != null) {
-      _sendTo({'t': 'act', 'k': 'ctx', 'v': label},
-          hostAddr!, hostPort);
+      _sendTo({'t': 'act', 'k': 'ctx', 'v': label}, hostAddr!, hostPort);
     }
   }
 
@@ -2317,9 +2295,7 @@ class Net extends ChangeNotifier {
     if (e == 'slam' || e == 'break') {
       Sfx.play('slam');
     } else if (e == 'door' || e == 'vent' || e == 'jam') {
-      if (e == 'door' && now - _lastLocalDoor < 400) {
-        if (myRole == 'G') return;
-      }
+      if (e == 'door' && now - _lastLocalDoor < 400 && myRole == 'G') return;
       Sfx.play('click');
     } else if (e == 'black') {
       Sfx.play('down');
@@ -2438,8 +2414,7 @@ class Btn extends StatelessWidget {
     final w = GestureDetector(
       onTap: on,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 10, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
           color: c.al(on == null ? 0.15 : 0.55),
           borderRadius: BorderRadius.circular(10),
@@ -2462,8 +2437,7 @@ class Btn extends StatelessWidget {
             if (sub.isNotEmpty)
               Text(
                 sub,
-                style: const TextStyle(
-                  fontSize: 10, color: Color(0xFFBBBBDD)),
+                style: const TextStyle(fontSize: 10, color: Color(0xFFBBBBDD)),
               ),
           ],
         ),
@@ -2536,9 +2510,9 @@ class _MenuPageState extends State<MenuPage> {
               maxLength: 14,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
-                labelText: 'Adin', counterText: ''),
-              onChanged: (v) => gs.myName =
-                  v.trim().isEmpty ? 'Oyuncu' : v.trim(),
+                  labelText: 'Adin', counterText: ''),
+              onChanged: (v) =>
+                  gs.myName = v.trim().isEmpty ? 'Oyuncu' : v.trim(),
             ),
             const SizedBox(height: 12),
             ElevatedButton(
@@ -2618,8 +2592,7 @@ class _MenuPageState extends State<MenuPage> {
               child: Text(
                 gs.status,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFFFFCC66), fontSize: 13),
+                style: const TextStyle(color: Color(0xFFFFCC66), fontSize: 13),
               ),
             ),
             const SizedBox(height: 10),
@@ -2652,12 +2625,12 @@ class ScanPage extends StatelessWidget {
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2, color: Color(0xFFFFB300)),
+                    strokeWidth: 2, color: Color(0xFFFFB300)),
               ),
               const SizedBox(width: 10),
               const Text('ODALAR ARANIYOR...',
                   style: TextStyle(
-                    fontWeight: FontWeight.w800, letterSpacing: 2)),
+                      fontWeight: FontWeight.w800, letterSpacing: 2)),
               const Spacer(),
               Btn(
                 t: 'GERI',
@@ -2695,7 +2668,7 @@ class ScanPage extends StatelessWidget {
                             color: const Color(0xFF151530),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: const Color(0xFF333366)),
+                                color: const Color(0xFF333366)),
                           ),
                           child: Row(
                             children: [
@@ -2709,7 +2682,7 @@ class ScanPage extends StatelessWidget {
                                   children: [
                                     Text('${h.name} odasi',
                                         style: const TextStyle(
-                                          fontWeight: FontWeight.w700)),
+                                            fontWeight: FontWeight.w700)),
                                     Text(
                                       '${h.addr.address} - ${h.count}/4 - ${MAPS[mp].name}',
                                       style: kSmall,
@@ -2717,8 +2690,7 @@ class ScanPage extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              chip('KATIL', const Color(0xFF2ECC71),
-                                  on: true),
+                              chip('KATIL', const Color(0xFF2ECC71), on: true),
                             ],
                           ),
                         ),
@@ -2735,6 +2707,16 @@ class ScanPage extends StatelessWidget {
 class LobbyPage extends StatelessWidget {
   final Net gs;
   const LobbyPage({super.key, required this.gs});
+
+  String _selName(String sel) {
+    if (sel == 'G') return 'GUVERDIN';
+    if (sel.startsWith('C')) {
+      final i = int.tryParse(sel.substring(1)) ?? 0;
+      return CHARS[i.clamp(0, CHARS.length - 1)].name;
+    }
+    return 'secim yok';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isHost = gs.isHost;
@@ -2748,10 +2730,10 @@ class LobbyPage extends StatelessWidget {
             children: [
               const Text('LOBI',
                   style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2,
-                    color: Color(0xFFFFB300))),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                      color: Color(0xFFFFB300))),
               const Spacer(),
               Btn(t: 'CIK', on: () => gs.leaveRoom(),
                   expand: false, c: const Color(0xFF922B21)),
@@ -2762,7 +2744,7 @@ class LobbyPage extends StatelessWidget {
           if (gs.status.isNotEmpty)
             Text(gs.status,
                 style: const TextStyle(
-                  color: Color(0xFFFFCC66), fontSize: 12)),
+                    color: Color(0xFFFFCC66), fontSize: 12)),
           const SizedBox(height: 8),
           const Text('HARITA (host secer):', style: kSmall),
           const SizedBox(height: 4),
@@ -2773,8 +2755,8 @@ class LobbyPage extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
                     onTap: isHost ? () => gs.setMap(i) : null,
-                    child: chip(MAPS[i].name,
-                        const Color(0xFF3498DB), on: gs.mapIdx == i),
+                    child: chip(MAPS[i].name, const Color(0xFF3498DB),
+                        on: gs.mapIdx == i),
                   ),
                 ),
             ],
@@ -2791,14 +2773,14 @@ class LobbyPage extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.only(right: 8),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 6),
+                        horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFF151530),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: p.sel == 'G'
-                            ? const Color(0xFFF1C40F)
-                            : const Color(0xFF333366)),
+                          color: p.sel == 'G'
+                              ? const Color(0xFFF1C40F)
+                              : const Color(0xFF333366)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2806,12 +2788,11 @@ class LobbyPage extends StatelessWidget {
                       children: [
                         Text('${p.host ? '*' : ''}${p.name}',
                             style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13)),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13)),
                         Text(_selName(p.sel),
                             style: const TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF9999CC))),
+                                fontSize: 11, color: Color(0xFF9999CC))),
                       ],
                     ),
                   ),
@@ -2819,8 +2800,7 @@ class LobbyPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text('KARAKTER SEC (ilk kutu = GUVERDIN):',
-              style: kSmall),
+          const Text('KARAKTER SEC (ilk kutu = GUVERDIN):', style: kSmall),
           const SizedBox(height: 6),
           Expanded(
             child: SingleChildScrollView(
@@ -2849,22 +2829,17 @@ class LobbyPage extends StatelessWidget {
                             height: 58,
                             child: Center(
                               child: Icon(Icons.security,
-                                  size: 44,
-                                  color: Color(0xFFF1C40F)),
+                                  size: 44, color: Color(0xFFF1C40F)),
                             ),
                           ),
                           const Text('GUVERDIN',
                               style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 11,
-                                color: Color(0xFFF1C40F))),
-                          Text(
-                            guardTaken && gs.mySel != 'G'
-                                ? 'dolu' : 'sen ol',
-                            style: const TextStyle(
-                              fontSize: 9,
-                              color: Color(0xFFAA9955)),
-                          ),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                  color: Color(0xFFF1C40F))),
+                          Text(guardTaken && gs.mySel != 'G' ? 'dolu' : 'sen ol',
+                              style: const TextStyle(
+                                  fontSize: 9, color: Color(0xFFAA9955))),
                         ],
                       ),
                     ),
@@ -2896,15 +2871,12 @@ class LobbyPage extends StatelessWidget {
                             ),
                             Text(CHARS[i].name,
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 11,
-                                  color: CHARS[i].color)),
-                            Text(
-                              '${CHARS[i].active}/${CHARS[i].passive}',
-                              style: const TextStyle(
-                                fontSize: 9,
-                                color: Color(0xFF8888AA)),
-                            ),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 11,
+                                    color: CHARS[i].color)),
+                            Text('${CHARS[i].active}/${CHARS[i].passive}',
+                                style: const TextStyle(
+                                    fontSize: 9, color: Color(0xFF8888AA))),
                           ],
                         ),
                       ),
@@ -2922,7 +2894,8 @@ class LobbyPage extends StatelessWidget {
                     : const Color(0xFF333344),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              onPressed: gs.rows.length >= 2 ? () => gs.startGame() : null,
+              onPressed:
+                  gs.rows.length >= 2 ? () => gs.startGame() : null,
               child: Text(
                 'OYUNU BASLAT (${gs.rows.length}/4) - min 2 kisi',
                 style: const TextStyle(fontWeight: FontWeight.w900),
@@ -2934,15 +2907,6 @@ class LobbyPage extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _selName(String sel) {
-    if (sel == 'G') return 'GUVERDIN';
-    if (sel.startsWith('C')) {
-      final i = int.tryParse(sel.substring(1)) ?? 0;
-      return CHARS[i.clamp(0, CHARS.length - 1)].name;
-    }
-    return 'secim yok';
   }
 }
 
@@ -2961,10 +2925,10 @@ class SoloPage extends StatelessWidget {
             children: [
               const Text('TEK KISILIK YZ',
                   style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2,
-                    color: Color(0xFFFFB300))),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                      color: Color(0xFFFFB300))),
               const Spacer(),
               Btn(t: 'GERI', on: () => gs._toMenu('Hazir'),
                   expand: false, c: const Color(0xFF555577)),
@@ -2988,8 +2952,8 @@ class SoloPage extends StatelessWidget {
                       gs.soloDiff = i;
                       gs.notifyListeners();
                     },
-                    child: chip(diffs[i],
-                        const Color(0xFFE74C3C), on: gs.soloDiff == i),
+                    child: chip(diffs[i], const Color(0xFFE74C3C),
+                        on: gs.soloDiff == i),
                   ),
                 ),
             ],
@@ -3026,8 +2990,8 @@ class SoloPage extends StatelessWidget {
                       gs.mapIdx = i;
                       gs.notifyListeners();
                     },
-                    child: chip(MAPS[i].name,
-                        const Color(0xFF3498DB), on: gs.mapIdx == i),
+                    child: chip(MAPS[i].name, const Color(0xFF3498DB),
+                        on: gs.mapIdx == i),
                   ),
                 ),
             ],
@@ -3040,8 +3004,7 @@ class SoloPage extends StatelessWidget {
             ),
             onPressed: () => gs.startSolo(),
             child: const Text('GECEYE BASLA',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900, fontSize: 16)),
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
           ),
         ],
       ),
@@ -3105,8 +3068,7 @@ class _GamePageState extends State<GamePage>
             if (vf.blind > 0)
               Positioned.fill(
                 child: Container(
-                  color: Colors.white.al(m.min(0.85, vf.blind)),
-                ),
+                    color: Colors.white.al(m.min(0.85, vf.blind))),
               ),
             if (gs.jsOn)
               Positioned.fill(child: JsOverlay(ch: gs.overJs, t: gs.jsT))
@@ -3157,9 +3119,7 @@ class _GamePageState extends State<GamePage>
             painter: NoiseP(seed: now ~/ 60, heavy: vf.cam, jam: jammed),
           ),
         ),
-        Positioned.fill(
-          child: const CustomPaint(painter: VignetteP()),
-        ),
+        Positioned.fill(child: const CustomPaint(painter: VignetteP())),
         Positioned(
           top: 8,
           left: 10,
@@ -3176,9 +3136,7 @@ class _GamePageState extends State<GamePage>
                       fontSize: 26,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
-                      shadows: [
-                        Shadow(blurRadius: 6, color: Colors.black)
-                      ],
+                      shadows: [Shadow(blurRadius: 6, color: Colors.black)],
                     ),
                   ),
                   Text(
@@ -3186,9 +3144,7 @@ class _GamePageState extends State<GamePage>
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: vf.black
-                          ? Colors.red
-                          : const Color(0xFFAAAAEE),
+                      color: vf.black ? Colors.red : const Color(0xFFAAAAEE),
                     ),
                   ),
                 ],
@@ -3201,18 +3157,16 @@ class _GamePageState extends State<GamePage>
                       width: 10,
                       height: 10,
                       decoration: BoxDecoration(
-                        color: (vf.t % 1 < 0.6)
-                            ? Colors.red
-                            : Colors.transparent,
+                        color: (vf.t % 1 < 0.6) ? Colors.red : Colors.transparent,
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 4),
                     const Text('REC',
                         style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 12)),
+                            color: Colors.red,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 12)),
                   ],
                 ),
               const SizedBox(width: 12),
@@ -3224,9 +3178,7 @@ class _GamePageState extends State<GamePage>
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
-                      color: vf.power < 25
-                          ? Colors.red
-                          : const Color(0xFF7CFC00),
+                      color: vf.power < 25 ? Colors.red : const Color(0xFF7CFC00),
                     ),
                   ),
                   Row(
@@ -3329,9 +3281,7 @@ class _GamePageState extends State<GamePage>
                 sub: vf.ddL > 0
                     ? 'KILIT ${vf.ddL.toStringAsFixed(1)}'
                     : (vf.dl ? 'ACIK' : 'KAPALI'),
-                c: vf.dl
-                    ? const Color(0xFF1E8449)
-                    : const Color(0xFF922B21),
+                c: vf.dl ? const Color(0xFF1E8449) : const Color(0xFF922B21),
                 on: vf.black || vf.ddL > 0 ? null : () => gs.gAct('dl'),
               ),
               const SizedBox(width: 6),
@@ -3363,9 +3313,7 @@ class _GamePageState extends State<GamePage>
                 sub: vf.ddR > 0
                     ? 'KILIT ${vf.ddR.toStringAsFixed(1)}'
                     : (vf.dr ? 'ACIK' : 'KAPALI'),
-                c: vf.dr
-                    ? const Color(0xFF1E8449)
-                    : const Color(0xFF922B21),
+                c: vf.dr ? const Color(0xFF1E8449) : const Color(0xFF922B21),
                 on: vf.black || vf.ddR > 0 ? null : () => gs.gAct('dr'),
               ),
             ],
@@ -3406,9 +3354,7 @@ class _GamePageState extends State<GamePage>
             painter: NoiseP(seed: now ~/ 90, heavy: false, jam: false),
           ),
         ),
-        Positioned.fill(
-          child: const CustomPaint(painter: VignetteP()),
-        ),
+        Positioned.fill(child: const CustomPaint(painter: VignetteP())),
         Positioned(
           top: 8,
           left: 10,
@@ -3420,14 +3366,14 @@ class _GamePageState extends State<GamePage>
                 children: [
                   Text(kHours[vf.hour.clamp(0, 6)],
                       style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white)),
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white)),
                   Text(CHARS[ci].name,
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: CHARS[ci].color)),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: CHARS[ci].color)),
                 ],
               ),
               const Spacer(),
@@ -3436,17 +3382,17 @@ class _GamePageState extends State<GamePage>
                 children: [
                   Text('GUC %${vf.power.toInt()}',
                       style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: vf.power < 25
-                            ? Colors.red
-                            : const Color(0xFF7CFC00))),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: vf.power < 25
+                              ? Colors.red
+                              : const Color(0xFF7CFC00))),
                   Text(
                     'SOL:${vf.dl ? 'ACIK' : 'KAPALI'} '
                     'SAG:${vf.dr ? 'ACIK' : 'KAPALI'} '
                     'VENT:${vf.vent ? 'ACIK' : 'KAPALI'}',
                     style: const TextStyle(
-                      fontSize: 10, color: Color(0xFFAAAADD)),
+                        fontSize: 10, color: Color(0xFFAAAADD)),
                   ),
                 ],
               ),
@@ -3471,11 +3417,7 @@ class _GamePageState extends State<GamePage>
               ),
             ),
           ),
-        Positioned(
-          bottom: 20,
-          left: 16,
-          child: Joy(onVec: gs.sendJoy),
-        ),
+        Positioned(bottom: 20, left: 16, child: Joy(onVec: gs.sendJoy)),
         Positioned(
           bottom: 24,
           right: 16,
@@ -3488,18 +3430,18 @@ class _GamePageState extends State<GamePage>
                   onTap: gs.doCtx,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 22, vertical: 14),
+                        horizontal: 22, vertical: 14),
                     decoration: BoxDecoration(
                       color: const Color(0xFFC0392B).al(0.85),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: Colors.white54, width: 2),
+                      border:
+                          Border.all(color: Colors.white54, width: 2),
                     ),
                     child: Text(ctx,
                         style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white)),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white)),
                   ),
                 ),
               const SizedBox(height: 12),
@@ -3514,10 +3456,9 @@ class _GamePageState extends State<GamePage>
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: CHARS[ci].color.al(
-                              cd > 0 ? 0.2 : 0.75),
-                            border: Border.all(
-                              color: CHARS[ci].color, width: 2),
+                            color: CHARS[ci].color.al(cd > 0 ? 0.2 : 0.75),
+                            border:
+                                Border.all(color: CHARS[ci].color, width: 2),
                           ),
                         ),
                       ),
@@ -3532,9 +3473,9 @@ class _GamePageState extends State<GamePage>
                       Center(
                         child: Text(CHARS[ci].active,
                             style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white)),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white)),
                       ),
                       if (cd > 0)
                         Positioned(
@@ -3544,9 +3485,9 @@ class _GamePageState extends State<GamePage>
                           child: Center(
                             child: Text(cd.toStringAsFixed(0),
                                 style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white70)),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white70)),
                           ),
                         ),
                     ],
@@ -3628,20 +3569,18 @@ class _EndPageState extends State<EndPage>
                       SizedBox(
                         height: 170,
                         width: 170,
-                        child: CustomPaint(
-                          painter: AnimPrev(ch: gs.overJs),
-                        ),
+                        child: CustomPaint(painter: AnimPrev(ch: gs.overJs)),
                       ),
                     const SizedBox(height: 10),
                     Text(
                       won ? 'KAZANDIN!' : 'YAKALANDIN!',
                       style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 4,
-                        color: won
-                            ? const Color(0xFF2ECC71)
-                            : const Color(0xFFE74C3C)),
+                          fontSize: 40,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 4,
+                          color: won
+                              ? const Color(0xFF2ECC71)
+                              : const Color(0xFFE74C3C)),
                     ),
                     const SizedBox(height: 10),
                     Text(gs.overReason,
@@ -3659,9 +3598,9 @@ class _EndPageState extends State<EndPage>
                         child: Text(
                           'SENI GORUYORUZ...',
                           style: TextStyle(
-                            color: Color(0xFFFF3333),
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 3),
+                              color: Color(0xFFFF3333),
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 3),
                         ),
                       ),
                     const SizedBox(height: 26),
@@ -3716,8 +3655,8 @@ class _EndPageState extends State<EndPage>
                       ),
                       Positioned.fill(
                         child: Container(
-                          color: Colors.red.al(
-                            0.25 + 0.2 * m.sin(surpriseT * 40).abs()),
+                          color: Colors.red
+                              .al(0.25 + 0.2 * m.sin(surpriseT * 40).abs()),
                         ),
                       ),
                     ],
@@ -3777,8 +3716,8 @@ class JoyP extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final c = Offset(size.width / 2, size.height / 2);
-    canvas.drawCircle(c, rad + 14,
-        Paint()..color = const Color(0xFF11112A).al(0.75));
+    canvas.drawCircle(
+        c, rad + 14, Paint()..color = const Color(0xFF11112A).al(0.75));
     canvas.drawCircle(
         c,
         rad + 14,
@@ -3787,8 +3726,8 @@ class JoyP extends CustomPainter {
           ..strokeWidth = 2
           ..color = const Color(0xFF4444AA).al(0.8));
     canvas.drawCircle(c, 4, Paint()..color = const Color(0xFF4444AA));
-    canvas.drawCircle(c + v, 26,
-        Paint()..color = const Color(0xFF8866FF).al(0.9));
+    canvas.drawCircle(
+        c + v, 26, Paint()..color = const Color(0xFF8866FF).al(0.9));
     canvas.drawCircle(
         c + v,
         26,
@@ -3813,8 +3752,7 @@ class ArcP extends CustomPainter {
       center: Offset(size.width / 2, size.height / 2),
       radius: size.width / 2,
     );
-    canvas.drawArc(r, -m.pi / 2, frac * 2 * m.pi, true,
-        Paint()..color = col);
+    canvas.drawArc(r, -m.pi / 2, frac * 2 * m.pi, true, Paint()..color = col);
   }
 
   @override
@@ -3878,9 +3816,8 @@ void drawAnimatronic(
 }) {
   final cd = CHARS[ch.clamp(0, CHARS.length - 1)];
   final Color body = dark ? const Color(0xFF0A0A10) : cd.color;
-  final Color body2 = dark
-      ? const Color(0xFF0A0A10)
-      : Color.lerp(cd.color, Colors.black, 0.35)!;
+  final Color body2 =
+      dark ? const Color(0xFF0A0A10) : Color.lerp(cd.color, Colors.black, 0.35)!;
   final Color eye = dark
       ? const Color(0xFFFFFFFF)
       : (ch == 5 ? const Color(0xFFFFF6B0) : const Color(0xFFEAF7FF));
@@ -3930,9 +3867,8 @@ void drawAnimatronic(
     ),
     Paint()..color = body2,
   );
-  final inner = dark
-      ? const Color(0xFF0A0A10)
-      : Color.lerp(cd.color, Colors.white, 0.25)!;
+  final inner =
+      dark ? const Color(0xFF0A0A10) : Color.lerp(cd.color, Colors.white, 0.25)!;
   canvas.drawOval(
     Rect.fromCenter(
       center: Offset(o.dx, o.dy + s * 0.34),
@@ -3981,8 +3917,15 @@ void drawAnimatronic(
       height: s * 0.4,
     );
     final hatC = dark ? const Color(0xFF0A0A10) : const Color(0xFF641E16);
-    canvas.drawArc(hatR, m.pi * 0.95, m.pi * 1.1, false,
-        Paint()..style = PaintingStyle.stroke..strokeWidth = s * 0.09..color = hatC);
+    canvas.drawArc(
+        hatR,
+        m.pi * 0.95,
+        m.pi * 1.1,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = s * 0.09
+          ..color = hatC);
     canvas.drawCircle(
       Offset(o.dx + s * 0.05, o.dy - s * 0.52),
       s * 0.07,
@@ -4004,11 +3947,7 @@ void drawAnimatronic(
       Paint()..color = body2..strokeWidth = s * 0.03,
     );
     final blink = (t % 0.8) < 0.4;
-    final ac = blink
-        ? const Color(0xFF2ECC71)
-        : const Color(0xFF145A32)
-            .al(1)
-            .al(1);
+    final ac = blink ? const Color(0xFF2ECC71) : const Color(0xFF145A32);
     canvas.drawCircle(
       Offset(o.dx, o.dy - s * 0.64),
       s * 0.045,
@@ -4150,15 +4089,10 @@ class OfficeP extends CustomPainter {
       ..color = Colors.white.al(0.03)
       ..strokeWidth = 1;
     for (int i = 1; i < 12; i++) {
-      canvas.drawLine(
-        Offset(w * i / 12, 0),
-        Offset(w * i / 12, horizon),
-        tile,
-      );
+      canvas.drawLine(Offset(w * i / 12, 0), Offset(w * i / 12, horizon), tile);
     }
-    final flick = vf.black
-        ? 0.0
-        : (0.8 + 0.15 * m.sin(t * 13) + 0.05 * r.nextDouble());
+    final flick =
+        vf.black ? 0.0 : (0.8 + 0.15 * m.sin(t * 13) + 0.05 * r.nextDouble());
     final lampX = w * 0.5;
     canvas.drawLine(
       Offset(lampX, 0),
@@ -4207,7 +4141,7 @@ class OfficeP extends CustomPainter {
       ..lineTo(w * 0.64, deskTop)
       ..lineTo(w * 0.72, h * 0.99)
       ..close();
-    final deskC = [Color(0xFF3A2A1C), Color(0xFF1D130B)];
+    const deskC = [Color(0xFF3A2A1C), Color(0xFF1D130B)];
     canvas.drawPath(
       desk,
       Paint()
@@ -4227,7 +4161,8 @@ class OfficeP extends CustomPainter {
       RRect.fromRectAndRadius(monR.inflate(4), const Radius.circular(6)),
       Paint()..color = const Color(0xFF14141E),
     );
-    final monCol = vf.black ? const Color(0xFF050508) : const Color(0xFF062511);
+    final monCol =
+        vf.black ? const Color(0xFF050508) : const Color(0xFF062511);
     canvas.drawRRect(
       RRect.fromRectAndRadius(monR, const Radius.circular(4)),
       Paint()..color = monCol,
@@ -4283,10 +4218,7 @@ class OfficeP extends CustomPainter {
         ..color = const Color(0xFF556677),
     );
     canvas.drawCircle(
-      Offset(fx, fy),
-      fr * 0.16,
-      Paint()..color = const Color(0xFF334455),
-    );
+      Offset(fx, fy), fr * 0.16, Paint()..color = const Color(0xFF334455));
     if (vf.black) {
       canvas.drawRect(
         Offset.zero & size,
@@ -4312,7 +4244,8 @@ class OfficeP extends CustomPainter {
 
   void _poster(Canvas canvas, Rect r2, int ch) {
     canvas.drawRect(r2, Paint()..color = const Color(0xFF241A33));
-    canvas.drawRect(r2.deflate(3), Paint()..color = const Color(0xFF31204A));
+    canvas.drawRect(
+        r2.deflate(3), Paint()..color = const Color(0xFF31204A));
     final c = Offset(r2.center.dx, r2.center.dy - r2.height * 0.1);
     final s = r2.height * 0.5;
     canvas.drawCircle(
@@ -4345,7 +4278,8 @@ class OfficeP extends CustomPainter {
     final opH = h * 0.6;
     final x0 = left ? w * 0.03 : w - w * 0.03 - opW;
     final op = Rect.fromLTWH(x0, h * 0.16, opW, opH);
-    canvas.drawRect(op.inflate(6), Paint()..color = const Color(0xFF2A2438));
+    canvas.drawRect(
+        op.inflate(6), Paint()..color = const Color(0xFF2A2438));
     const doorC = [Color(0xFF02020A), Color(0xFF000000)];
     canvas.drawRect(
       op,
@@ -4384,8 +4318,7 @@ class OfficeP extends CustomPainter {
       }
     }
     if (wait > 0.5 && closedFrac < 0.5) {
-      final a = (wait / 5).clamp(0.0, 1.0) *
-          (0.35 + 0.3 * m.sin(t * 8).abs());
+      final a = (wait / 5).clamp(0.0, 1.0) * (0.35 + 0.3 * m.sin(t * 8).abs());
       canvas.drawRect(
         op.inflate(5),
         Paint()
@@ -4422,20 +4355,14 @@ class OfficeP extends CustomPainter {
       for (double sx = op.left; sx < op.right; sx += seg) {
         final idx = ((sx - op.left) / seg).toInt();
         final sw = m.min(seg, op.right - sx);
-        final col = idx.isEven
-            ? const Color(0xFFE8B93C)
-            : const Color(0xFF141414);
-        canvas.drawRect(Rect.fromLTWH(sx, by - 8, sw, 8),
-            Paint()..color = col);
+        final col =
+            idx.isEven ? const Color(0xFFE8B93C) : const Color(0xFF141414);
+        canvas.drawRect(Rect.fromLTWH(sx, by - 8, sw, 8), Paint()..color = col);
       }
     }
-    final lampC = Offset(
-      left ? op.right + 10 : op.left - 10,
-      op.top - 8,
-    );
-    final lampCol = closedFrac > 0.5
-        ? const Color(0xFFFF3B3B)
-        : const Color(0xFF3BFF6E);
+    final lampC = Offset(left ? op.right + 10 : op.left - 10, op.top - 8);
+    final lampCol =
+        closedFrac > 0.5 ? const Color(0xFFFF3B3B) : const Color(0xFF3BFF6E);
     canvas.drawCircle(
       lampC,
       5,
@@ -4510,7 +4437,8 @@ class MapP extends CustomPainter {
             ..lineTo(p2.dx, p2.dy),
           14 * s,
         );
-        final vc = open ? const Color(0xFF1ABC9C) : const Color(0xFF922B21);
+        final vc =
+            open ? const Color(0xFF1ABC9C) : const Color(0xFF922B21);
         canvas.drawPath(
           dashP,
           Paint()
@@ -4537,7 +4465,8 @@ class MapP extends CustomPainter {
       final open = e.kind == 'doorL' ? vf.dl : vf.dr;
       final dir = (p2 - p1);
       final doorMid = p1 + dir * 0.72;
-      final dc = open ? const Color(0xFF1E8449) : const Color(0xFF922B21);
+      final dc =
+          open ? const Color(0xFF1E8449) : const Color(0xFF922B21);
       canvas.drawLine(
         p1,
         p2,
@@ -4548,8 +4477,10 @@ class MapP extends CustomPainter {
           ..color = dc.al(camMode ? 0.7 : 0.95),
       );
       final perp = Offset(-dir.dy, dir.dx);
-      final pl = perp / (m.sqrt(perp.dx * perp.dx + perp.dy * perp.dy) + 0.0001);
-      final barCol = open ? const Color(0xFF7CFC00) : const Color(0xFFFF4C4C);
+      final pl =
+          perp / (m.sqrt(perp.dx * perp.dx + perp.dy * perp.dy) + 0.0001);
+      final barCol =
+          open ? const Color(0xFF7CFC00) : const Color(0xFFFF4C4C);
       canvas.drawLine(
         doorMid - pl * 34 * s,
         doorMid + pl * 34 * s,
@@ -4558,7 +4489,8 @@ class MapP extends CustomPainter {
     }
     final o = pos['O']!;
     final offR = Rect.fromCircle(center: o, radius: 74 * s);
-    final offCol = camMode ? const Color(0xFF0E3B22) : const Color(0xFF2C2450);
+    final offCol =
+        camMode ? const Color(0xFF0E3B22) : const Color(0xFF2C2450);
     canvas.drawRRect(
       RRect.fromRectAndRadius(offR, Radius.circular(18 * s)),
       Paint()..color = offCol,
@@ -4573,7 +4505,8 @@ class MapP extends CustomPainter {
     for (final n in map.nodes) {
       if (n.id == 'O') continue;
       final p = pos[n.id]!;
-      final nc = camMode ? const Color(0xFF0F3320) : const Color(0xFF2A3355);
+      final nc =
+          camMode ? const Color(0xFF0F3320) : const Color(0xFF2A3355);
       canvas.drawCircle(p, 40 * s, Paint()..color = nc);
     }
     for (final z in vf.noise) {
@@ -4728,10 +4661,11 @@ class VignetteP extends CustomPainter {
       ],
       stops: const [0.55, 0.85, 1.0],
     );
-    canvas.drawRect(Offset.zero & size, Paint()..shader = grad.createShader(r2));
+    canvas.drawRect(
+        Offset.zero & size, Paint()..shader = grad.createShader(r2));
   }
 
   @override
   bool shouldRepaint(VignetteP old) => false;
 }
-// DOSYA SONU
+// DOSYA SONU - SURUM 6
