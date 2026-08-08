@@ -1,5 +1,5 @@
-// SURUM 6 - TEK DOSYA. BASKA KOD KALMASIN.
-// lib/main.dart - GECE VARDIYASI (LAN + TEK KISILIK YZ)
+// SURUM 7 - TEK DOSYA (lib/main.dart)
+// GECE VARDIYASI: LAN FNAF + TEK KISILIK YZ
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -183,9 +183,7 @@ class Sfx {
     } catch (_) {}
   }
 
-  static String _p(String n) {
-    return '$dir${Platform.pathSeparator}$n.wav';
-  }
+  static String _p(String n) => '$dir${Platform.pathSeparator}$n.wav';
 
   static void _wf(String n, Uint8List b) {
     File(_p(n)).writeAsBytesSync(b);
@@ -383,10 +381,11 @@ class Sfx {
         final st = 1.0 + k * 3.8;
         if (t > st && t < st + 3.2) {
           final dt2 = t - st;
-          v += m.sin(2 * m.pi * notes[k % 4] * dt2) * 0.16 * m.exp(-dt2 * 1.4);
+          v += m.sin(2 * m.pi * notes[k % 4] * dt2) *
+              0.16 * m.exp(-dt2 * 1.4);
         }
       }
-      var fade = 1.0;
+      double fade = 1.0;
       if (t < 0.8) fade = t / 0.8;
       if (t > dur - 0.8) fade = (dur - t) / 0.8;
       out[i] = v * fade * 0.32;
@@ -403,9 +402,8 @@ class Sfx {
       final t = i / sr;
       final nz = r.nextDouble() * 2 - 1;
       lp += (nz - lp) * 0.25;
-      final v = lp * 0.7 * m.exp(-t * 16) +
+      out[i] = lp * 0.7 * m.exp(-t * 16) +
           m.sin(2 * m.pi * 52 * t) * m.exp(-t * 9) * 0.9;
-      out[i] = v * 0.9;
     }
     return out;
   }
@@ -684,6 +682,26 @@ class Net extends ChangeNotifier {
   double _jy = 0;
   int tickN = 0;
   int _lastLocalDoor = 0;
+
+  void goSolo() {
+    page = 5;
+    notifyListeners();
+  }
+
+  void setSoloDiff(int i) {
+    soloDiff = i;
+    notifyListeners();
+  }
+
+  void setSoloCount(int i) {
+    soloCount = i;
+    notifyListeners();
+  }
+
+  void setSoloMap(int i) {
+    mapIdx = i;
+    notifyListeners();
+  }
 
   void _onSock(SocketEvent e) {
     if (e != SocketEvent.read) return;
@@ -2548,8 +2566,7 @@ class _MenuPageState extends State<MenuPage> {
               ),
               onPressed: () {
                 _setName();
-                gs.page = 5;
-                gs.notifyListeners();
+                gs.goSolo();
               },
               child: const Text('TEK KISILIK - YZ HAYATTA KALMA',
                   style: TextStyle(fontWeight: FontWeight.w800)),
@@ -2634,7 +2651,7 @@ class ScanPage extends StatelessWidget {
               const Spacer(),
               Btn(
                 t: 'GERI',
-                on: () => gs._toMenu('Arama iptal'),
+                on: () => gs.leaveRoom(),
                 expand: false,
                 c: const Color(0xFF555577),
               ),
@@ -2930,7 +2947,7 @@ class SoloPage extends StatelessWidget {
                       letterSpacing: 2,
                       color: Color(0xFFFFB300))),
               const Spacer(),
-              Btn(t: 'GERI', on: () => gs._toMenu('Hazir'),
+              Btn(t: 'GERI', on: () => gs.leaveRoom(),
                   expand: false, c: const Color(0xFF555577)),
             ],
           ),
@@ -2948,10 +2965,7 @@ class SoloPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
-                    onTap: () {
-                      gs.soloDiff = i;
-                      gs.notifyListeners();
-                    },
+                    onTap: () => gs.setSoloDiff(i),
                     child: chip(diffs[i], const Color(0xFFE74C3C),
                         on: gs.soloDiff == i),
                   ),
@@ -2967,10 +2981,7 @@ class SoloPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
-                    onTap: () {
-                      gs.soloCount = i;
-                      gs.notifyListeners();
-                    },
+                    onTap: () => gs.setSoloCount(i),
                     child: chip('$i', const Color(0xFF8E44AD),
                         on: gs.soloCount == i),
                   ),
@@ -2986,10 +2997,7 @@ class SoloPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
-                    onTap: () {
-                      gs.mapIdx = i;
-                      gs.notifyListeners();
-                    },
+                    onTap: () => gs.setSoloMap(i),
                     child: chip(MAPS[i].name, const Color(0xFF3498DB),
                         on: gs.mapIdx == i),
                   ),
@@ -3032,7 +3040,7 @@ class _GamePageState extends State<GamePage>
   }
 
   void _tick() {
-    final d = c.lastElapsedDuration;
+    final d = c.lastElapsedDuration ?? Duration.zero;
     double dt = 0.016;
     if (lastD != null) {
       dt = m.min(0.05, (d - lastD!).inMicroseconds / 1000000);
@@ -4616,7 +4624,7 @@ class NoiseP extends CustomPainter {
       final a = r.nextDouble() * (jam ? 0.4 : (heavy ? 0.2 : 0.07));
       white.color = Colors.white.al(a);
       final sw = r.nextDouble() * 2.2 + 0.6;
-      final sh = r.nextDouble() < 0.12 ? 2 : 1;
+      final double sh = r.nextDouble() < 0.12 ? 2.0 : 1.0;
       canvas.drawRect(
         Rect.fromLTWH(
           r.nextDouble() * size.width,
@@ -4668,4 +4676,4 @@ class VignetteP extends CustomPainter {
   @override
   bool shouldRepaint(VignetteP old) => false;
 }
-// DOSYA SONU - SURUM 6
+// DOSYA SONU - SURUM 7
