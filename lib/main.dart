@@ -1,20 +1,25 @@
-// lib/main.dart - GECE VARDIYASI: FNAF tarzı LAN + Tek Kişilik YZ
+// DOSYA BASI
+// lib/main.dart - GECE VARDIYASI (LAN + TEK KISILIK YZ)
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as m;
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 const int kPort = 41237;
 const double kGameLen = 150.0;
 const int kMaxPlayers = 4;
-const List<String> kHours = ['12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM', '6 AM'];
+const List<String> kHours = [
+  '12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM', '6 AM'
+];
 
 extension Al on Color {
-  Color al(double o) => Color.fromARGB((o.clamp(0.0, 1.0) * 255).round(), red, green, blue);
+  Color al(double o) {
+    final int a = (o.clamp(0.0, 1.0) * 255).round();
+    return Color.fromARGB(a, red, green, blue);
+  }
 }
 
 double _d(dynamic v) => v is num ? v.toDouble() : 0.0;
@@ -28,7 +33,10 @@ class CharDef {
   final double cd;
   final String active;
   final String passive;
-  const CharDef(this.name, this.color, this.speed, this.cd, this.active, this.passive);
+  const CharDef(
+    this.name, this.color, this.speed,
+    this.cd, this.active, this.passive,
+  );
 }
 
 const List<CharDef> CHARS = [
@@ -49,12 +57,14 @@ const List<CharDef> CHARS = [
 class MNode {
   final String id;
   final String name;
-  final double x, y;
+  final double x;
+  final double y;
   const MNode(this.id, this.name, this.x, this.y);
 }
 
 class MEdge {
-  final String a, b;
+  final String a;
+  final String b;
   final String kind;
   const MEdge(this.a, this.b, [this.kind = '']);
 }
@@ -67,49 +77,76 @@ class GameMap {
 }
 
 const GameMap kMapKlasik = GameMap('KLASIK', [
-  MNode('TL', 'SolUst', 170, 170), MNode('U', 'Ust Koridor', 500, 140),
-  MNode('TR', 'SagUst', 830, 170), MNode('R', 'Sag Koridor', 870, 500),
-  MNode('BR', 'SagAlt', 830, 830), MNode('D', 'Alt Koridor', 500, 870),
-  MNode('BL', 'SolAlt', 170, 830), MNode('L', 'Sol Koridor', 130, 500),
+  MNode('TL', 'SolUst', 170, 170),
+  MNode('U', 'Ust Koridor', 500, 140),
+  MNode('TR', 'SagUst', 830, 170),
+  MNode('R', 'Sag Koridor', 870, 500),
+  MNode('BR', 'SagAlt', 830, 830),
+  MNode('D', 'Alt Koridor', 500, 870),
+  MNode('BL', 'SolAlt', 170, 830),
+  MNode('L', 'Sol Koridor', 130, 500),
   MNode('O', 'OFIS', 500, 505),
-  MNode('P1', 'Depo A', 890, 330), MNode('P2', 'Depo B', 330, 890),
+  MNode('P1', 'Depo A', 890, 330),
+  MNode('P2', 'Depo B', 330, 890),
 ], [
-  MEdge('TL', 'U'), MEdge('U', 'TR'), MEdge('TR', 'P1'), MEdge('P1', 'R'),
-  MEdge('R', 'BR'), MEdge('BR', 'D'), MEdge('D', 'P2'), MEdge('P2', 'BL'),
+  MEdge('TL', 'U'), MEdge('U', 'TR'),
+  MEdge('TR', 'P1'), MEdge('P1', 'R'),
+  MEdge('R', 'BR'), MEdge('BR', 'D'),
+  MEdge('D', 'P2'), MEdge('P2', 'BL'),
   MEdge('BL', 'L'), MEdge('L', 'TL'),
-  MEdge('L', 'O', 'doorL'), MEdge('R', 'O', 'doorR'), MEdge('U', 'O', 'vent'),
+  MEdge('L', 'O', 'doorL'),
+  MEdge('R', 'O', 'doorR'),
+  MEdge('U', 'O', 'vent'),
 ]);
 
 const GameMap kMapSade = GameMap('SADE HALKA', [
-  MNode('TL', 'SolUst', 170, 170), MNode('U', 'Ust Koridor', 500, 140),
-  MNode('TR', 'SagUst', 830, 170), MNode('R', 'Sag Koridor', 870, 500),
-  MNode('BR', 'SagAlt', 830, 830), MNode('D', 'Alt Koridor', 500, 870),
-  MNode('BL', 'SolAlt', 170, 830), MNode('L', 'Sol Koridor', 130, 500),
+  MNode('TL', 'SolUst', 170, 170),
+  MNode('U', 'Ust Koridor', 500, 140),
+  MNode('TR', 'SagUst', 830, 170),
+  MNode('R', 'Sag Koridor', 870, 500),
+  MNode('BR', 'SagAlt', 830, 830),
+  MNode('D', 'Alt Koridor', 500, 870),
+  MNode('BL', 'SolAlt', 170, 830),
+  MNode('L', 'Sol Koridor', 130, 500),
   MNode('O', 'OFIS', 500, 505),
 ], [
-  MEdge('TL', 'U'), MEdge('U', 'TR'), MEdge('TR', 'R'), MEdge('R', 'BR'),
-  MEdge('BR', 'D'), MEdge('D', 'BL'), MEdge('BL', 'L'), MEdge('L', 'TL'),
-  MEdge('L', 'O', 'doorL'), MEdge('R', 'O', 'doorR'), MEdge('U', 'O', 'vent'),
+  MEdge('TL', 'U'), MEdge('U', 'TR'),
+  MEdge('TR', 'R'), MEdge('R', 'BR'),
+  MEdge('BR', 'D'), MEdge('D', 'BL'),
+  MEdge('BL', 'L'), MEdge('L', 'TL'),
+  MEdge('L', 'O', 'doorL'),
+  MEdge('R', 'O', 'doorR'),
+  MEdge('U', 'O', 'vent'),
 ]);
 
 const GameMap kMapGenis = GameMap('GENIS', [
-  MNode('TL', 'SolUst', 170, 170), MNode('U', 'Ust Koridor', 500, 140),
-  MNode('TR', 'SagUst', 830, 170), MNode('R', 'Sag Koridor', 870, 500),
-  MNode('BR', 'SagAlt', 830, 830), MNode('D', 'Alt Koridor', 500, 870),
-  MNode('BL', 'SolAlt', 170, 830), MNode('L', 'Sol Koridor', 130, 500),
+  MNode('TL', 'SolUst', 170, 170),
+  MNode('U', 'Ust Koridor', 500, 140),
+  MNode('TR', 'SagUst', 830, 170),
+  MNode('R', 'Sag Koridor', 870, 500),
+  MNode('BR', 'SagAlt', 830, 830),
+  MNode('D', 'Alt Koridor', 500, 870),
+  MNode('BL', 'SolAlt', 170, 830),
+  MNode('L', 'Sol Koridor', 130, 500),
   MNode('O', 'OFIS', 500, 505),
-  MNode('P1', 'Depo A', 890, 330), MNode('P2', 'Depo B', 330, 890),
-  MNode('P3', 'Depo C', 330, 110), MNode('P4', 'Depo D', 110, 665),
+  MNode('P1', 'Depo A', 890, 330),
+  MNode('P2', 'Depo B', 330, 890),
+  MNode('P3', 'Depo C', 330, 110),
+  MNode('P4', 'Depo D', 110, 665),
 ], [
-  MEdge('TL', 'P3'), MEdge('P3', 'U'), MEdge('U', 'TR'), MEdge('TR', 'P1'),
-  MEdge('P1', 'R'), MEdge('R', 'BR'), MEdge('BR', 'D'), MEdge('D', 'P2'),
-  MEdge('P2', 'BL'), MEdge('BL', 'P4'), MEdge('P4', 'L'), MEdge('L', 'TL'),
-  MEdge('L', 'O', 'doorL'), MEdge('R', 'O', 'doorR'), MEdge('U', 'O', 'vent'),
+  MEdge('TL', 'P3'), MEdge('P3', 'U'),
+  MEdge('U', 'TR'), MEdge('TR', 'P1'),
+  MEdge('P1', 'R'), MEdge('R', 'BR'),
+  MEdge('BR', 'D'), MEdge('D', 'P2'),
+  MEdge('P2', 'BL'), MEdge('BL', 'P4'),
+  MEdge('P4', 'L'), MEdge('L', 'TL'),
+  MEdge('L', 'O', 'doorL'),
+  MEdge('R', 'O', 'doorR'),
+  MEdge('U', 'O', 'vent'),
 ]);
 
 const List<GameMap> MAPS = [kMapKlasik, kMapSade, kMapGenis];
 
-// ============================ SES ============================
 class Sfx {
   static const int sr = 22050;
   static bool ready = false;
@@ -134,19 +171,21 @@ class Sfx {
     }
     try {
       if (ready) return;
-      final d = await Directory.systemTemp.createTemp('gecevardiyasi');
+      final d = await Directory.systemTemp.createTemp('gv');
       dir = d.path;
-      _wf('scream', _genScream());
-      _wf('amb', _genAmb());
-      _wf('slam', _genSlam());
-      _wf('click', _genClick());
-      _wf('chime', _genChime());
-      _wf('down', _genDown());
+      _wf('scream', _wav(_genScream()));
+      _wf('amb', _wav(_genAmb()));
+      _wf('slam', _wav(_genSlam()));
+      _wf('click', _wav(_genClick()));
+      _wf('chime', _wav(_genChime()));
+      _wf('down', _wav(_genDown()));
       ready = true;
     } catch (_) {}
   }
 
-  static String _p(String n) => '$dir${Platform.pathSeparator}$n.wav';
+  static String _p(String n) {
+    return '$dir${Platform.pathSeparator}$n.wav';
+  }
 
   static void _wf(String n, Uint8List b) {
     File(_p(n)).writeAsBytesSync(b);
@@ -176,8 +215,14 @@ class Sfx {
     if (name == 'scream' || name == 'js') {
       SystemSound.play(SystemSoundType.alert);
       HapticFeedback.heavyImpact();
-      Future<void>.delayed(const Duration(milliseconds: 120), () => HapticFeedback.heavyImpact());
-      Future<void>.delayed(const Duration(milliseconds: 260), () => HapticFeedback.vibrate());
+      Future<void>.delayed(
+        const Duration(milliseconds: 120),
+        () => HapticFeedback.heavyImpact(),
+      );
+      Future<void>.delayed(
+        const Duration(milliseconds: 260),
+        () => HapticFeedback.vibrate(),
+      );
     } else if (name == 'slam' || name == 'break') {
       SystemSound.play(SystemSoundType.click);
       HapticFeedback.mediumImpact();
@@ -194,18 +239,23 @@ class Sfx {
     if (_mobile) {
       SystemSound.play(SystemSoundType.alert);
       HapticFeedback.vibrate();
-      Future<void>.delayed(const Duration(milliseconds: 180), () {
-        SystemSound.play(SystemSoundType.alert);
-        HapticFeedback.heavyImpact();
-      });
-      Future<void>.delayed(const Duration(milliseconds: 420), () => HapticFeedback.vibrate());
+      Future<void>.delayed(
+        const Duration(milliseconds: 180),
+        () {
+          SystemSound.play(SystemSoundType.alert);
+          HapticFeedback.heavyImpact();
+        },
+      );
       return;
     }
     for (int i = 0; i < 3; i++) {
-      Future<void>.delayed(Duration(milliseconds: i * 220), () {
-        _busy.remove('scream');
-        play('scream');
-      });
+      Future<void>.delayed(
+        Duration(milliseconds: i * 220),
+        () {
+          _busy.remove('scream');
+          play('scream');
+        },
+      );
     }
   }
 
@@ -214,9 +264,12 @@ class Sfx {
       if (_ambOn) return;
       _ambOn = true;
       _ambT?.cancel();
-      _ambT = Timer.periodic(const Duration(milliseconds: 1700), (_) {
-        if (_ambOn) HapticFeedback.lightImpact();
-      });
+      _ambT = Timer.periodic(
+        const Duration(milliseconds: 1700),
+        (_) {
+          if (_ambOn) HapticFeedback.lightImpact();
+        },
+      );
       return;
     }
     if (!ready || _ambOn) return;
@@ -233,7 +286,9 @@ class Sfx {
         await p.exitCode;
       } catch (_) {}
       _live.remove('amb');
-      await Future<void>.delayed(const Duration(milliseconds: 200));
+      await Future<void>.delayed(
+        const Duration(milliseconds: 200),
+      );
     }
   }
 
@@ -302,9 +357,10 @@ class Sfx {
       final f = 780 - 540 * p + 90 * m.sin(t * 37);
       final saw = 2 * ((t * f) % 1) - 1;
       final nz = r.nextDouble() * 2 - 1;
-      final growl = ((t * 92) % 1) > 0.5 ? 1.0 : -1.0;
-      final env = m.min(1.0, t / 0.04) * m.pow(1 - p, 0.7).toDouble();
-      var v = saw * 0.5 + nz * 0.35 + growl * 0.25;
+      final gr = ((t * 92) % 1) > 0.5 ? 1.0 : -1.0;
+      final env = m.min(1.0, t / 0.04) *
+          m.pow(1 - p, 0.7).toDouble();
+      var v = saw * 0.5 + nz * 0.35 + gr * 0.25;
       v = _tanh(2.6 * v) * env * 0.85;
       out[i] = v;
     }
@@ -320,7 +376,8 @@ class Sfx {
     final notes = [110.0, 103.8, 130.8, 98.0];
     for (int i = 0; i < n; i++) {
       final t = i / sr;
-      double v = m.sin(2 * m.pi * 46 * t) * 0.5 + m.sin(2 * m.pi * 92.4 * t) * 0.2;
+      double v = m.sin(2 * m.pi * 46 * t) * 0.5;
+      v += m.sin(2 * m.pi * 92.4 * t) * 0.2;
       final nz = r.nextDouble() * 2 - 1;
       lp += (nz - lp) * 0.05;
       v += lp * 0.35;
@@ -329,7 +386,8 @@ class Sfx {
         final st = 1.0 + k * 3.8;
         if (t > st && t < st + 3.2) {
           final dt2 = t - st;
-          v += m.sin(2 * m.pi * notes[k % 4] * dt2) * 0.16 * m.exp(-dt2 * 1.4);
+          v += m.sin(2 * m.pi * notes[k % 4] * dt2) *
+              0.16 * m.exp(-dt2 * 1.4);
         }
       }
       var fade = 1.0;
@@ -349,7 +407,9 @@ class Sfx {
       final t = i / sr;
       final nz = r.nextDouble() * 2 - 1;
       lp += (nz - lp) * 0.25;
-      out[i] = lp * 0.7 * m.exp(-t * 16) + m.sin(2 * m.pi * 52 * t) * m.exp(-t * 9) * 0.9;
+      final v = lp * 0.7 * m.exp(-t * 16) +
+          m.sin(2 * m.pi * 52 * t) * m.exp(-t * 9) * 0.9;
+      out[i] = v * 0.9;
     }
     return out;
   }
@@ -373,7 +433,10 @@ class Sfx {
       double v = 0;
       for (int k = 0; k < 3; k++) {
         final st = k * 0.22;
-        if (t > st) v += m.sin(2 * m.pi * notes[k] * (t - st)) * m.exp(-(t - st) * 2.2) * 0.35;
+        if (t > st) {
+          v += m.sin(2 * m.pi * notes[k] * (t - st)) *
+              m.exp(-(t - st) * 2.2) * 0.35;
+        }
       }
       out[i] = v;
     }
@@ -393,16 +456,24 @@ class Sfx {
 
   static List<List<String>> _cmds(String p) {
     try {
-      if (Platform.isMacOS) return [
-            ['afplay', p]
-          ];
-      if (Platform.isLinux) return [
-            ['paplay', p],
-            ['aplay', '-q', p]
-          ];
-      if (Platform.isWindows) return [
-            ['powershell', '-NoProfile', '-Command', '[System.Media.SoundPlayer]::new(\'$p\').PlaySync()']
-          ];
+      if (Platform.isMacOS) {
+        return [
+          ['afplay', p]
+        ];
+      }
+      if (Platform.isLinux) {
+        return [
+          ['paplay', p],
+          ['aplay', '-q', p]
+        ];
+      }
+      if (Platform.isWindows) {
+        final ps = '[System.Media.SoundPlayer]::new'
+            '(\'$p\').PlaySync()';
+        return [
+          ['powershell', '-NoProfile', '-Command', ps]
+        ];
+      }
     } catch (_) {}
     return [];
   }
@@ -418,7 +489,6 @@ class Sfx {
   }
 }
 
-// ============================ VERİ ============================
 class PInfo {
   final int pid;
   final InternetAddress addr;
@@ -426,7 +496,8 @@ class PInfo {
   final String name;
   String sel;
   int lastSeen;
-  PInfo(this.pid, this.addr, this.port, this.name, this.lastSeen) : sel = '';
+  PInfo(this.pid, this.addr, this.port, this.name, this.lastSeen)
+      : sel = '';
 }
 
 class HostInfo {
@@ -452,16 +523,20 @@ class Actor {
   final String name;
   final int char;
   String node;
-  String? eA, eB;
+  String? eA;
+  String? eB;
   double prog = 0;
   double stun = 0;
   double cdUntil = 0;
-  double buffU = 0, buffM = 1;
-  double hideU = 0, ventU = 0;
+  double buffU = 0;
+  double buffM = 1;
+  double hideU = 0;
+  double ventU = 0;
   String? forcing;
   double forceT = 0;
   double waitT = 0;
-  double jx = 0, jy = 0;
+  double jx = 0;
+  double jy = 0;
   int lastIn = 0;
   bool isAI = false;
   int aiGoal = -1;
@@ -480,12 +555,20 @@ class VActor {
   final int pid;
   final String name;
   final int ch;
-  final double x, y;
-  final double stun, cd, wait;
-  final bool iv, hd;
+  final double x;
+  final double y;
+  final double stun;
+  final double cd;
+  final double wait;
+  final bool iv;
+  final bool hd;
   final String nd;
   final String fc;
-  VActor(this.pid, this.name, this.ch, this.x, this.y, this.stun, this.cd, this.wait, this.iv, this.hd, this.nd, this.fc);
+  VActor(
+    this.pid, this.name, this.ch, this.x, this.y,
+    this.stun, this.cd, this.wait, this.iv, this.hd,
+    this.nd, this.fc,
+  );
 }
 
 class Nz {
@@ -499,15 +582,27 @@ class VF {
   int hour = 0;
   double power = 100;
   int usage = 1;
-  bool dl = true, dr = true, vent = true, light = false, cam = false, black = false;
-  double jam = 0, fear = 0, blind = 0, waitL = 0, waitR = 0, forceL = 0, forceR = 0;
-  double ddL = 0, ddR = 0;
-  int thL = -1, thR = -1;
+  bool dl = true;
+  bool dr = true;
+  bool vent = true;
+  bool light = false;
+  bool cam = false;
+  bool black = false;
+  double jam = 0;
+  double fear = 0;
+  double blind = 0;
+  double waitL = 0;
+  double waitR = 0;
+  double forceL = 0;
+  double forceR = 0;
+  double ddL = 0;
+  double ddR = 0;
+  int thL = -1;
+  int thR = -1;
   List<VActor> actors = [];
   List<Nz> noise = [];
 }
 
-// ============================ NET + SİM + YZ ============================
 class Net extends ChangeNotifier {
   int page = 0;
   String status = 'Hazir. LAN veya TEK KISILIK YZ modu.';
@@ -528,7 +623,11 @@ class Net extends ChangeNotifier {
   int lastHostRx = 0;
   bool scanning = false;
   final Map<String, HostInfo> found = {};
-  Timer? scanT, pingT, cliT, joinTO, simT;
+  Timer? scanT;
+  Timer? pingT;
+  Timer? cliT;
+  Timer? joinTO;
+  Timer? simT;
   final m.Random _r = m.Random();
 
   final Map<int, PInfo> players = {};
@@ -554,25 +653,39 @@ class Net extends ChangeNotifier {
 
   double sPower = 100;
   bool black = false;
-  bool dl = true, dr = true, ventOpen = true, lightOn = false, camOn = false;
-  double dlDis = 0, drDis = 0, jamU = 0, fearU = 0, blindU = 0;
+  bool dl = true;
+  bool dr = true;
+  bool ventOpen = true;
+  bool lightOn = false;
+  bool camOn = false;
+  double dlDis = 0;
+  double drDis = 0;
+  double jamU = 0;
+  double fearU = 0;
+  double blindU = 0;
   final Map<int, Actor> actors = {};
   final List<NzMark> noise = [];
   final List<String> evQ = [];
   final List<String> sfxQ = [];
-  int closeL = 0, closeR = 0;
+  int closeL = 0;
+  int closeR = 0;
   Map<String, MNode> nodeById = {};
   Map<String, List<MEdge>> edgesByNode = {};
   Map<String, double> edgeLen = {};
   Map<String, String> edgeKind = {};
   GameMap get curMap => MAPS[mapIdx];
 
-  Map<String, dynamic>? sCur, sPrev;
+  Map<String, dynamic>? sCur;
+  Map<String, dynamic>? sPrev;
   int sCurAt = 0;
 
-  double dlShow = 1, drShow = 1, fanA = 0;
-  double shakeX = 0, shakeY = 0;
-  double _jx = 0, _jy = 0;
+  double dlShow = 1;
+  double drShow = 1;
+  double fanA = 0;
+  double shakeX = 0;
+  double shakeY = 0;
+  double _jx = 0;
+  double _jy = 0;
   int tickN = 0;
   int _lastLocalDoor = 0;
 
@@ -617,7 +730,11 @@ class Net extends ChangeNotifier {
   Future<bool> _ensureSock(int port) async {
     if (sock != null) return true;
     try {
-      sock = await RawDatagramSocket.bind(InternetAddress.anyIPv4, port, reuseAddress: true);
+      sock = await RawDatagramSocket.bind(
+        InternetAddress.anyIPv4,
+        port,
+        reuseAddress: true,
+      );
       sock!.broadcastEnabled = true;
       sub = sock!.listen(_onSock);
       return true;
@@ -640,7 +757,7 @@ class Net extends ChangeNotifier {
     notifyListeners();
     final ok = await _ensureSock(kPort);
     if (!ok) {
-      status = 'Port acilamadi. Baska bir oda acik olabilir.';
+      status = 'Port acilamadi. Baska oda acik olabilir.';
       notifyListeners();
       return;
     }
@@ -650,7 +767,8 @@ class Net extends ChangeNotifier {
     myPid = 1;
     pidSeq = 2;
     players.clear();
-    players[1] = PInfo(1, InternetAddress.loopbackIPv4, 0, myName, DateTime.now().millisecondsSinceEpoch);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    players[1] = PInfo(1, InternetAddress.loopbackIPv4, 0, myName, now);
     inGame = false;
     over = false;
     page = 2;
@@ -662,7 +780,9 @@ class Net extends ChangeNotifier {
 
   Future<void> _findLocalIp() async {
     try {
-      final ifs = await NetworkInterface.list(type: InternetAddressType.IPv4);
+      final ifs = await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
+      );
       for (final i in ifs) {
         for (final a in i.addresses) {
           if (!a.isLoopback) {
@@ -695,23 +815,42 @@ class Net extends ChangeNotifier {
 
   int _pidOf(InternetAddress a, int p) {
     for (final pl in players.values) {
-      if (pl.addr.address == a.address && pl.port == p) return pl.pid;
+      if (pl.addr.address == a.address && pl.port == p) {
+        return pl.pid;
+      }
     }
     return -1;
   }
 
   List<Map<String, dynamic>> _lobbyList() {
-    return players.values.map((p) => {'p': p.pid, 'n': p.name, 's': p.sel, 'h': p.pid == hostPid}).toList();
+    return players.values.map((p) {
+      return {
+        'p': p.pid,
+        'n': p.name,
+        's': p.sel,
+        'h': p.pid == hostPid
+      };
+    }).toList();
   }
 
   void _bcastLobby() {
-    _bcast({'t': 'lobby', 'players': _lobbyList(), 'map': mapIdx, 'host': hostPid});
+    _bcast({
+      't': 'lobby',
+      'players': _lobbyList(),
+      'map': mapIdx,
+      'host': hostPid
+    });
   }
 
   void _hostRx(Map<String, dynamic> j, InternetAddress ad, int po) {
     final t = _s(j['t']);
     if (t == 'discover') {
-      _sendTo({'t': 'hostinfo', 'hn': myName, 'mp': mapIdx, 'pc': players.length}, ad, po);
+      _sendTo({
+        't': 'hostinfo',
+        'hn': myName,
+        'mp': mapIdx,
+        'pc': players.length
+      }, ad, po);
       return;
     }
     if (t == 'hello') {
@@ -726,8 +865,15 @@ class Net extends ChangeNotifier {
       final id = pidSeq++;
       var nm = _s(j['n']);
       if (nm.isEmpty) nm = 'Oyuncu';
-      players[id] = PInfo(id, ad, po, nm, DateTime.now().millisecondsSinceEpoch);
-      _sendTo({'t': 'welcome', 'pid': id, 'host': hostPid, 'map': mapIdx, 'players': _lobbyList()}, ad, po);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      players[id] = PInfo(id, ad, po, nm, now);
+      _sendTo({
+        't': 'welcome',
+        'pid': id,
+        'host': hostPid,
+        'map': mapIdx,
+        'players': _lobbyList()
+      }, ad, po);
       _bcastLobby();
       status = '${players[id]!.name} katildi';
       notifyListeners();
@@ -781,14 +927,21 @@ class Net extends ChangeNotifier {
     status = 'Odalar araniyor...';
     _startCliTimer();
     scanT?.cancel();
-    scanT = Timer.periodic(const Duration(milliseconds: 1200), (_) => _sendDiscover());
+    scanT = Timer.periodic(
+      const Duration(milliseconds: 1200),
+      (_) => _sendDiscover(),
+    );
     _sendDiscover();
     notifyListeners();
   }
 
   void _sendDiscover() {
     try {
-      sock?.send(utf8.encode(jsonEncode({'t': 'discover', 'n': myName})), InternetAddress('255.255.255.255'), kPort);
+      final b = InternetAddress('255.255.255.255');
+      sock?.send(utf8.encode(jsonEncode({
+        't': 'discover',
+        'n': myName
+      })), b, kPort);
     } catch (_) {}
     final now = DateTime.now().millisecondsSinceEpoch;
     found.removeWhere((k, v) => now - v.ts > 5000);
@@ -805,12 +958,17 @@ class Net extends ChangeNotifier {
     if (cliT != null) return;
     cliT = Timer.periodic(const Duration(milliseconds: 100), (_) {
       final now = DateTime.now().millisecondsSinceEpoch;
-      if (page > 0 && !isHost && hostAddr != null && now - lastHostRx > 9000) {
-        _toMenu('Baglanti zaman asimi');
-        return;
+      if (page > 0 && !isHost && hostAddr != null) {
+        if (now - lastHostRx > 9000) {
+          _toMenu('Baglanti zaman asimi');
+          return;
+        }
       }
-      if (page == 3 && !over && !isHost && myRole == 'A' && hostAddr != null) {
-        _sendTo({'t': 'state', 'jx': _jx, 'jy': _jy}, hostAddr!, hostPort);
+      if (page == 3 && !over && !isHost && myRole == 'A') {
+        if (hostAddr != null) {
+          _sendTo({'t': 'state', 'jx': _jx, 'jy': _jy},
+              hostAddr!, hostPort);
+        }
       }
     });
   }
@@ -840,7 +998,7 @@ class Net extends ChangeNotifier {
     joinTO?.cancel();
     joinTO = Timer(const Duration(seconds: 4), () {
       if (page != 2) {
-        status = 'Yanit yok. IP dogru mu? Ayni Wi-Fi mi?';
+        status = 'Yanit yok. IP ve ayni Wi-Fi kontrol et.';
         notifyListeners();
       }
     });
@@ -855,14 +1013,18 @@ class Net extends ChangeNotifier {
     if (t == 'hostinfo') {
       if (scanning) {
         final key = '${ad.address}:$po';
-        found[key] = HostInfo(_s(j['hn']), _i(j['mp']), _i(j['pc']), ad, po, DateTime.now().millisecondsSinceEpoch);
+        final now = DateTime.now().millisecondsSinceEpoch;
+        found[key] = HostInfo(
+          _s(j['hn']), _i(j['mp']), _i(j['pc']), ad, po, now);
         status = '${found.length} oda bulundu';
         notifyListeners();
       }
       return;
     }
-    if (hostAddr != null && (ad.address != hostAddr!.address || po != hostPort)) {
-      if (t != 'err') return;
+    if (hostAddr != null) {
+      if (ad.address != hostAddr!.address || po != hostPort) {
+        if (t != 'err') return;
+      }
     }
     lastHostRx = DateTime.now().millisecondsSinceEpoch;
     if (t == 'welcome') {
@@ -915,7 +1077,13 @@ class Net extends ChangeNotifier {
         }
       }
     } else if (t == 'over') {
-      _onOver(_s(j['w']), _s(j['rs']), _i(j['js']), _i(j['kp']), _i(j['sp']) == 1);
+      _onOver(
+        _s(j['w']),
+        _s(j['rs']),
+        _i(j['js']),
+        _i(j['kp']),
+        _i(j['sp']) == 1,
+      );
     } else if (t == 'err') {
       status = _s(j['m']);
       notifyListeners();
@@ -933,7 +1101,8 @@ class Net extends ChangeNotifier {
     final list = j['players'];
     if (list is List) {
       for (final p in list) {
-        rows.add(PRow(_i(p['p']), _s(p['n']), _s(p['s']), _i(p['h']) == 1));
+        rows.add(PRow(
+          _i(p['p']), _s(p['n']), _s(p['s']), _i(p['h']) == 1));
       }
     }
   }
@@ -1005,7 +1174,9 @@ class Net extends ChangeNotifier {
     if (isHost) {
       _toMenu('Oda kapatildi');
     } else {
-      if (hostAddr != null) _sendTo({'t': 'leave'}, hostAddr!, hostPort);
+      if (hostAddr != null) {
+        _sendTo({'t': 'leave'}, hostAddr!, hostPort);
+      }
       _toMenu('Odadan ayrildin');
     }
   }
@@ -1024,12 +1195,14 @@ class Net extends ChangeNotifier {
     hostPid = 1;
     myPid = 1;
     players.clear();
-    players[1] = PInfo(1, InternetAddress.loopbackIPv4, 0, myName, DateTime.now().millisecondsSinceEpoch);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    players[1] = PInfo(1, InternetAddress.loopbackIPv4, 0, myName, now);
     inGame = false;
     over = false;
     _startHostTimers();
     final chars = <int>[];
-    final pool = List<int>.generate(CHARS.length, (i) => i)..shuffle(_r);
+    final pool = List<int>.generate(CHARS.length, (i) => i);
+    pool.shuffle(_r);
     for (int i = 0; i < soloCount && i < pool.length; i++) {
       chars.add(pool[i]);
     }
@@ -1052,7 +1225,8 @@ class Net extends ChangeNotifier {
     if (isHost) {
       _applyAct(myPid, 'pick', sel);
     } else if (hostAddr != null) {
-      _sendTo({'t': 'act', 'k': 'pick', 'v': sel}, hostAddr!, hostPort);
+      _sendTo({'t': 'act', 'k': 'pick', 'v': sel},
+          hostAddr!, hostPort);
     }
   }
 
@@ -1117,7 +1291,9 @@ class Net extends ChangeNotifier {
 
   void _startSimTimer() {
     simT?.cancel();
-    simT = Timer.periodic(const Duration(milliseconds: 50), (_) => _tick());
+    simT = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      _tick();
+    });
   }
 
   void _initMapIdx() {
@@ -1130,13 +1306,21 @@ class Net extends ChangeNotifier {
       edgesByNode.putIfAbsent(e.b, () => []).add(e);
       final na = nodeById[e.a]!;
       final nb = nodeById[e.b]!;
-      edgeLen['${e.a}|${e.b}'] = m.sqrt((na.x - nb.x) * (na.x - nb.x) + (na.y - nb.y) * (na.y - nb.y));
+      final dx = na.x - nb.x;
+      final dy = na.y - nb.y;
+      edgeLen['${e.a}|${e.b}'] = m.sqrt(dx * dx + dy * dy);
       edgeKind['${e.a}|${e.b}'] = e.kind;
     }
   }
 
-  double _len(String a, String b) => edgeLen['$a|$b'] ?? edgeLen['$b|$a'] ?? 1.0;
-  String _kind(String a, String b) => edgeKind['$a|$b'] ?? edgeKind['$b|$a'] ?? '';
+  double _len(String a, String b) {
+    return edgeLen['$a|$b'] ?? edgeLen['$b|$a'] ?? 1.0;
+  }
+
+  String _kind(String a, String b) {
+    return edgeKind['$a|$b'] ?? edgeKind['$b|$a'] ?? '';
+  }
+
   double _lerp(double a, double b, double t) => a + (b - a) * t;
 
   void _initSim(int guard, Map<String, dynamic> roles) {
@@ -1160,20 +1344,23 @@ class Net extends ChangeNotifier {
     noise.clear();
     evQ.clear();
     actors.clear();
-    final spawns = curMap.nodes.where((n) => n.id != 'O' && n.id != 'L' && n.id != 'R' && n.id != 'U').toList()..shuffle(_r);
+    final spawns = curMap.nodes
+        .where((n) => n.id != 'O' && n.id != 'L' &&
+            n.id != 'R' && n.id != 'U')
+        .toList();
+    spawns.shuffle(_r);
     int si = 0;
     roles.forEach((pidStr, info) {
       final pid = int.tryParse(pidStr) ?? -1;
-      if (_s(info['r']) == 'A') {
-        final nd = spawns[si % spawns.length].id;
-        si++;
-        final ch = _i(info['c']).clamp(0, CHARS.length - 1);
-        final nm = players[pid]?.name ?? 'YZ-${CHARS[ch].name}';
-        final a = Actor(pid, nm, ch, nd);
-        a.isAI = pid >= 100;
-        if (a.isAI) a.aiDecide = 1.0 + _r.nextDouble();
-        actors[pid] = a;
-      }
+      if (_s(info['r']) != 'A') return;
+      final nd = spawns[si % spawns.length].id;
+      si++;
+      final ch = _i(info['c']).clamp(0, CHARS.length - 1);
+      final nm = players[pid]?.name ?? 'YZ-${CHARS[ch].name}';
+      final a = Actor(pid, nm, ch, nd);
+      a.isAI = pid >= 100;
+      if (a.isAI) a.aiDecide = 1.0 + _r.nextDouble();
+      actors[pid] = a;
     });
   }
 
@@ -1324,7 +1511,8 @@ class Net extends ChangeNotifier {
             final na = nodeById[a.node]!;
             final nb = nodeById[other]!;
             final len = _len(a.node, other);
-            final dot = ((nb.x - na.x) / len) * ix + ((nb.y - na.y) / len) * iy;
+            final dot = ((nb.x - na.x) / len) * ix +
+                ((nb.y - na.y) / len) * iy;
             if (dot > bestDot) {
               bestDot = dot;
               best = other;
@@ -1379,14 +1567,18 @@ class Net extends ChangeNotifier {
   void _slamOn(String side) {
     final nid = side == 'L' ? 'L' : 'R';
     for (final a in actors.values) {
-      if (a.eB != null && ((a.eA == nid && a.eB == 'O') || (a.eA == 'O' && a.eB == nid))) {
-        _slam(a);
-      }
+      if (a.eB == null) continue;
+      final hit = (a.eA == nid && a.eB == 'O') ||
+          (a.eA == 'O' && a.eB == nid);
+      if (hit) _slam(a);
     }
   }
 
   void _slam(Actor a) {
-    final opts = curMap.nodes.where((n) => n.id != 'O' && n.id != a.node).map((n) => n.id).toList();
+    final opts = curMap.nodes
+        .where((n) => n.id != 'O' && n.id != a.node)
+        .map((n) => n.id)
+        .toList();
     a.node = opts[_r.nextInt(opts.length)];
     a.eA = null;
     a.eB = null;
@@ -1433,7 +1625,8 @@ class Net extends ChangeNotifier {
           if (a.aiDecide <= 0) {
             final roll = _r.nextDouble();
             if (roll < 0.45 * aggr) {
-              if (c.active == 'doorbreak' && sT >= a.cdUntil) {
+              final canBr = c.active == 'doorbreak';
+              if (canBr && sT >= a.cdUntil) {
                 if (a.node == 'L') {
                   dl = true;
                   dlDis = sT + 5;
@@ -1459,7 +1652,9 @@ class Net extends ChangeNotifier {
       }
       if (a.aiRetreat > 0) {
         a.aiRetreat -= dt;
-        final far = ['BR', 'BL', 'D'].where((n) => nodeById.containsKey(n)).toList();
+        final far = ['BR', 'BL', 'D']
+            .where((n) => nodeById.containsKey(n))
+            .toList();
         if (far.isEmpty) continue;
         final target = far[_r.nextInt(far.length)];
         final path = _bfs(a.node, target);
@@ -1473,9 +1668,11 @@ class Net extends ChangeNotifier {
         }
         continue;
       }
-      if (a.node == 'U' && ventOpen && _r.nextDouble() < 0.4 * aggr * dt * 20) {
-        _startEdge(a, 'O');
-        continue;
+      if (a.node == 'U' && ventOpen) {
+        if (_r.nextDouble() < 0.4 * aggr * dt * 20) {
+          _startEdge(a, 'O');
+          continue;
+        }
       }
       if (a.aiDecide <= 0) {
         final wl = 1.0 + closeR * 0.4;
@@ -1530,7 +1727,10 @@ class Net extends ChangeNotifier {
       blindU = sT + 1.6;
       if (lightOn) lightOn = false;
     } else if (c.active == 'noise') {
-      final opts = curMap.nodes.where((n) => n.id != 'O').map((n) => n.id).toList();
+      final opts = curMap.nodes
+          .where((n) => n.id != 'O')
+          .map((n) => n.id)
+          .toList();
       noise.add(NzMark(opts[_r.nextInt(opts.length)], sT + 7));
     } else if (c.active == 'fear') {
       fearU = sT + 3;
@@ -1544,7 +1744,9 @@ class Net extends ChangeNotifier {
         if (sPower <= 0) _blackout();
       }
     } else if (c.active == 'teleport') {
-      final opts = ['L', 'R', 'U'].where((n) => nodeById.containsKey(n)).toList();
+      final opts = ['L', 'R', 'U']
+          .where((n) => nodeById.containsKey(n))
+          .toList();
       a.node = opts[_r.nextInt(opts.length)];
       a.eA = null;
       a.eB = null;
@@ -1568,9 +1770,14 @@ class Net extends ChangeNotifier {
         final p = players[pid];
         if (p == null) return;
         if (s == 'G') {
-          final other = players.values.where((q) => q.sel == 'G' && q.pid != pid).toList();
+          final other = players.values
+              .where((q) => q.sel == 'G' && q.pid != pid)
+              .toList();
           if (other.isNotEmpty) {
-            if (pid != hostPid) _sendTo({'t': 'err', 'm': 'Guvenlik zaten secildi'}, p.addr, p.port);
+            if (pid != hostPid) {
+              _sendTo({'t': 'err', 'm': 'Guvenlik zaten secildi'},
+                  p.addr, p.port);
+            }
             return;
           }
         }
@@ -1617,9 +1824,10 @@ class Net extends ChangeNotifier {
         ventOpen = !ventOpen;
         if (!ventOpen) {
           for (final a in actors.values) {
-            if (a.eB != null && ((a.eA == 'U' && a.eB == 'O') || (a.eA == 'O' && a.eB == 'U'))) {
-              _slam(a);
-            }
+            if (a.eB == null) continue;
+            final hit = (a.eA == 'U' && a.eB == 'O') ||
+                (a.eA == 'O' && a.eB == 'U');
+            if (hit) _slam(a);
           }
         }
         evQ.add('vent');
@@ -1660,7 +1868,10 @@ class Net extends ChangeNotifier {
         blindU = sT + 1.6;
         if (lightOn) lightOn = false;
       } else if (c.active == 'noise') {
-        final opts = curMap.nodes.where((n) => n.id != 'O').map((n) => n.id).toList();
+        final opts = curMap.nodes
+            .where((n) => n.id != 'O')
+            .map((n) => n.id)
+            .toList();
         noise.add(NzMark(opts[_r.nextInt(opts.length)], sT + 7));
       } else if (c.active == 'fear') {
         fearU = sT + 3;
@@ -1674,7 +1885,9 @@ class Net extends ChangeNotifier {
           if (sPower <= 0) _blackout();
         }
       } else if (c.active == 'teleport') {
-        final opts = ['L', 'R', 'U'].where((n) => nodeById.containsKey(n)).toList();
+        final opts = ['L', 'R', 'U']
+            .where((n) => nodeById.containsKey(n))
+            .toList();
         a.node = opts[_r.nextInt(opts.length)];
         a.eA = null;
         a.eB = null;
@@ -1729,9 +1942,12 @@ class Net extends ChangeNotifier {
     for (final a in actors.values) {
       final c = CHARS[a.char];
       final atDoor = a.eB == null && a.node == node;
-      final crossing = a.eB != null && ((a.eA == node && a.eB == 'O') || (a.eA == 'O' && a.eB == node));
+      final crossing = a.eB != null &&
+          ((a.eA == node && a.eB == 'O') || (a.eA == 'O' && a.eB == node));
       if (atDoor || crossing) {
-        if (c.passive == 'lightimmune' || c.passive == 'ghost' || sT < a.hideU) continue;
+        final imm = c.passive == 'lightimmune';
+        final gh = c.passive == 'ghost';
+        if (imm || gh || sT < a.hideU) continue;
         return a.char;
       }
     }
@@ -1743,7 +1959,8 @@ class Net extends ChangeNotifier {
     final al = <Map<String, dynamic>>[];
     for (final a in actors.values) {
       final c = CHARS[a.char];
-      double x, y;
+      double x;
+      double y;
       if (a.eB != null) {
         final pa = nodeById[a.eA!]!;
         final pb = nodeById[a.eB!]!;
@@ -1772,7 +1989,8 @@ class Net extends ChangeNotifier {
       });
     }
     sfxQ.addAll(evQ);
-    double fL = 0, fR = 0;
+    double fL = 0;
+    double fR = 0;
     for (final a in actors.values) {
       if (a.forcing == 'L') fL = m.max(fL, a.forceT / 2.6);
       if (a.forcing == 'R') fR = m.max(fR, a.forceT / 2.6);
@@ -1831,11 +2049,20 @@ class Net extends ChangeNotifier {
     simT?.cancel();
     simT = null;
     surprise = _r.nextDouble() < 0.01;
-    _bcast({'t': 'over', 'w': side, 'rs': reason, 'js': js, 'kp': killer, 'sp': surprise ? 1 : 0});
+    _bcast({
+      't': 'over',
+      'w': side,
+      'rs': reason,
+      'js': js,
+      'kp': killer,
+      'sp': surprise ? 1 : 0
+    });
     _onOver(side, reason, js, killer, surprise);
   }
 
-  void _onOver(String side, String reason, int js, int killer, bool sp) {
+  void _onOver(
+    String side, String reason, int js, int killer, bool sp,
+  ) {
     over = true;
     overSide = side;
     overReason = reason;
@@ -1889,8 +2116,12 @@ class Net extends ChangeNotifier {
     vf.waitL = _waitAt('L');
     vf.waitR = _waitAt('R');
     for (final a in actors.values) {
-      if (a.forcing == 'L') vf.forceL = m.max(vf.forceL, a.forceT / 2.6);
-      if (a.forcing == 'R') vf.forceR = m.max(vf.forceR, a.forceT / 2.6);
+      if (a.forcing == 'L') {
+        vf.forceL = m.max(vf.forceL, a.forceT / 2.6);
+      }
+      if (a.forcing == 'R') {
+        vf.forceR = m.max(vf.forceR, a.forceT / 2.6);
+      }
     }
     vf.ddL = m.max(0.0, dlDis - sT);
     vf.ddR = m.max(0.0, drDis - sT);
@@ -1898,7 +2129,8 @@ class Net extends ChangeNotifier {
     vf.thR = _revealAt('R') ?? -1;
     for (final a in actors.values) {
       final c = CHARS[a.char];
-      double x, y;
+      double x;
+      double y;
       if (a.eB != null) {
         final pa = nodeById[a.eA!]!;
         final pb = nodeById[a.eB!]!;
@@ -1911,7 +2143,12 @@ class Net extends ChangeNotifier {
       }
       final hidden = c.passive == 'ghost' || sT < a.hideU;
       final iv = a.eB != null && _kind(a.eA!, a.eB!) == 'vent';
-      vf.actors.add(VActor(a.pid, a.name, a.char, x, y, m.max(0.0, a.stun), m.max(0.0, a.cdUntil - sT), a.waitT, iv, hidden, a.eB != null ? '${a.eA}>${a.eB}' : a.node, a.forcing ?? ''));
+      final nd = a.eB != null ? '${a.eA}>${a.eB}' : a.node;
+      vf.actors.add(VActor(
+        a.pid, a.name, a.char, x, y,
+        m.max(0.0, a.stun), m.max(0.0, a.cdUntil - sT),
+        a.waitT, iv, hidden, nd, a.forcing ?? '',
+      ));
     }
     for (final z in noise) {
       vf.noise.add(Nz(z.o, z.u - sT));
@@ -1946,7 +2183,10 @@ class Net extends ChangeNotifier {
     vf.thL = _i(cur['tl']);
     vf.thR = _i(cur['tr']);
     final curList = cur['actors'] is List ? cur['actors'] as List : const [];
-    final prevList = (sPrev != null && sPrev!['actors'] is List) ? sPrev!['actors'] as List : const [];
+    List prevList = const [];
+    if (sPrev != null && sPrev!['actors'] is List) {
+      prevList = sPrev!['actors'] as List;
+    }
     for (final a in curList) {
       final pid = _i(a['i']);
       double x = _d(a['x']);
@@ -1958,7 +2198,12 @@ class Net extends ChangeNotifier {
           break;
         }
       }
-      vf.actors.add(VActor(pid, _s(a['n']), _i(a['c']), x, y, _d(a['st']), _d(a['cd']), _d(a['wt']), _i(a['iv']) == 1, _i(a['hd']) == 1, _s(a['nd']), _s(a['fc'])));
+      vf.actors.add(VActor(
+        pid, _s(a['n']), _i(a['c']), x, y,
+        _d(a['st']), _d(a['cd']), _d(a['wt']),
+        _i(a['iv']) == 1, _i(a['hd']) == 1,
+        _s(a['nd']), _s(a['fc']),
+      ));
     }
     final nz = cur['nz'];
     if (nz is List) {
@@ -2006,7 +2251,9 @@ class Net extends ChangeNotifier {
     if (me == null) return null;
     if (me.nd.contains('>')) {
       final parts = me.nd.split('>');
-      if (parts.length == 2 && parts[1] == 'O' && (parts[0] == 'L' || parts[0] == 'R')) return 'SALDIR';
+      if (parts.length == 2 && parts[1] == 'O') {
+        if (parts[0] == 'L' || parts[0] == 'R') return 'SALDIR';
+      }
       return null;
     }
     if (me.nd == 'L') return vf.dl ? 'GIR' : 'ZORLA';
@@ -2022,7 +2269,8 @@ class Net extends ChangeNotifier {
     if (isHost) {
       _applyAct(myPid, 'ctx', label);
     } else if (hostAddr != null) {
-      _sendTo({'t': 'act', 'k': 'ctx', 'v': label}, hostAddr!, hostPort);
+      _sendTo({'t': 'act', 'k': 'ctx', 'v': label},
+          hostAddr!, hostPort);
     }
   }
 
@@ -2069,7 +2317,9 @@ class Net extends ChangeNotifier {
     if (e == 'slam' || e == 'break') {
       Sfx.play('slam');
     } else if (e == 'door' || e == 'vent' || e == 'jam') {
-      if (e == 'door' && now - _lastLocalDoor < 400 && myRole == 'G') return;
+      if (e == 'door' && now - _lastLocalDoor < 400) {
+        if (myRole == 'G') return;
+      }
       Sfx.play('click');
     } else if (e == 'black') {
       Sfx.play('down');
@@ -2088,7 +2338,6 @@ class Net extends ChangeNotifier {
   }
 }
 
-// ============================ UI ============================
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Sfx.init();
@@ -2102,7 +2351,10 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Gece Vardiyasi',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(brightness: Brightness.dark, scaffoldBackgroundColor: const Color(0xFF05040A)),
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF05040A),
+      ),
       home: const Root(),
     );
   }
@@ -2150,11 +2402,20 @@ class _RootState extends State<Root> {
     } else {
       body = MenuPage(gs: gs);
     }
-    return Scaffold(backgroundColor: const Color(0xFF05040A), body: SafeArea(child: body));
+    return Scaffold(
+      backgroundColor: const Color(0xFF05040A),
+      body: SafeArea(child: body),
+    );
   }
 }
 
-const TextStyle kTitle = TextStyle(fontSize: 30, fontWeight: FontWeight.w900, letterSpacing: 3, color: Color(0xFFFFB300), shadows: [Shadow(blurRadius: 12, color: Color(0x88FF6600))]);
+const TextStyle kTitle = TextStyle(
+  fontSize: 30,
+  fontWeight: FontWeight.w900,
+  letterSpacing: 3,
+  color: Color(0xFFFFB300),
+  shadows: [Shadow(blurRadius: 12, color: Color(0x88FF6600))],
+);
 const TextStyle kTxt = TextStyle(fontSize: 14, color: Color(0xFFCFCFE8));
 const TextStyle kSmall = TextStyle(fontSize: 11, color: Color(0xFF8888AA));
 
@@ -2164,23 +2425,46 @@ class Btn extends StatelessWidget {
   final VoidCallback? on;
   final Color c;
   final bool expand;
-  const Btn({super.key, required this.t, this.sub = '', this.on, this.c = Colors.deepPurple, this.expand = true});
+  const Btn({
+    super.key,
+    required this.t,
+    this.sub = '',
+    this.on,
+    this.c = Colors.deepPurple,
+    this.expand = true,
+  });
   @override
   Widget build(BuildContext context) {
     final w = GestureDetector(
       onTap: on,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        padding: const EdgeInsets.symmetric(
+          vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
           color: c.al(on == null ? 0.15 : 0.55),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: on == null ? Colors.white12 : c.al(0.9), width: 1.5),
+          border: Border.all(
+            color: on == null ? Colors.white12 : c.al(0.9),
+            width: 1.5,
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(t, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
-            if (sub.isNotEmpty) Text(sub, style: const TextStyle(fontSize: 10, color: Color(0xFFBBBBDD))),
+            Text(
+              t,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+            if (sub.isNotEmpty)
+              Text(
+                sub,
+                style: const TextStyle(
+                  fontSize: 10, color: Color(0xFFBBBBDD)),
+              ),
           ],
         ),
       ),
@@ -2192,8 +2476,19 @@ class Btn extends StatelessWidget {
 Widget chip(String s, Color c, {bool on = false}) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-    decoration: BoxDecoration(color: c.al(on ? 0.7 : 0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: c, width: on ? 2 : 1)),
-    child: Text(s, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: on ? Colors.white : c)),
+    decoration: BoxDecoration(
+      color: c.al(on ? 0.7 : 0.2),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: c, width: on ? 2 : 1),
+    ),
+    child: Text(
+      s,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: on ? Colors.white : c,
+      ),
+    ),
   );
 }
 
@@ -2215,6 +2510,11 @@ class _MenuPageState extends State<MenuPage> {
     super.dispose();
   }
 
+  void _setName() {
+    final v = nameC.text.trim();
+    widget.gs.myName = v.isEmpty ? 'Oyuncu' : v;
+  }
+
   @override
   Widget build(BuildContext context) {
     final gs = widget.gs;
@@ -2225,44 +2525,60 @@ class _MenuPageState extends State<MenuPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('GECE VARDIYASI', textAlign: TextAlign.center, style: kTitle),
+            const Text('GECE VARDIYASI',
+                textAlign: TextAlign.center, style: kTitle),
             const SizedBox(height: 4),
-            const Text('LAN FNAF + TEK KISILIK YZ', textAlign: TextAlign.center, style: kSmall),
+            const Text('LAN FNAF + TEK KISILIK YZ',
+                textAlign: TextAlign.center, style: kSmall),
             const SizedBox(height: 26),
             TextField(
               controller: nameC,
               maxLength: 14,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Adin', counterText: ''),
-              onChanged: (v) => gs.myName = v.trim().isEmpty ? 'Oyuncu' : v.trim(),
+              decoration: const InputDecoration(
+                labelText: 'Adin', counterText: ''),
+              onChanged: (v) => gs.myName =
+                  v.trim().isEmpty ? 'Oyuncu' : v.trim(),
             ),
             const SizedBox(height: 12),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7D3C98), padding: const EdgeInsets.symmetric(vertical: 14)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF7D3C98),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
               onPressed: () {
-                gs.myName = nameC.text.trim().isEmpty ? 'Oyuncu' : nameC.text.trim();
+                _setName();
                 gs.hostGame();
               },
-              child: const Text('HOST OL (ODA KUR)', style: TextStyle(fontWeight: FontWeight.w800)),
+              child: const Text('HOST OL (ODA KUR)',
+                  style: TextStyle(fontWeight: FontWeight.w800)),
             ),
             const SizedBox(height: 8),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1F618D), padding: const EdgeInsets.symmetric(vertical: 14)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1F618D),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
               onPressed: () {
-                gs.myName = nameC.text.trim().isEmpty ? 'Oyuncu' : nameC.text.trim();
+                _setName();
                 gs.startScan();
               },
-              child: const Text('LOBI ARA', style: TextStyle(fontWeight: FontWeight.w800)),
+              child: const Text('LOBI ARA',
+                  style: TextStyle(fontWeight: FontWeight.w800)),
             ),
             const SizedBox(height: 8),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF922B21), padding: const EdgeInsets.symmetric(vertical: 14)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF922B21),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
               onPressed: () {
-                gs.myName = nameC.text.trim().isEmpty ? 'Oyuncu' : nameC.text.trim();
+                _setName();
                 gs.page = 5;
                 gs.notifyListeners();
               },
-              child: const Text('TEK KISILIK - YZ HAYATTA KALMA', style: TextStyle(fontWeight: FontWeight.w800)),
+              child: const Text('TEK KISILIK - YZ HAYATTA KALMA',
+                  style: TextStyle(fontWeight: FontWeight.w800)),
             ),
             const SizedBox(height: 14),
             Row(
@@ -2271,15 +2587,22 @@ class _MenuPageState extends State<MenuPage> {
                   child: TextField(
                     controller: ipC,
                     style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(hintText: 'IP ile katil (192.168.x.x)', isDense: true),
+                    decoration: const InputDecoration(
+                      hintText: 'IP ile katil (192.168.x.x)',
+                      isDense: true,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF145A32)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF145A32),
+                  ),
                   onPressed: () {
-                    gs.myName = nameC.text.trim().isEmpty ? 'Oyuncu' : nameC.text.trim();
-                    if (ipC.text.trim().isNotEmpty) gs.joinIp(ipC.text.trim());
+                    _setName();
+                    if (ipC.text.trim().isNotEmpty) {
+                      gs.joinIp(ipC.text.trim());
+                    }
                   },
                   child: const Text('KATIL'),
                 ),
@@ -2288,11 +2611,23 @@ class _MenuPageState extends State<MenuPage> {
             const SizedBox(height: 18),
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: const Color(0xFF111122), borderRadius: BorderRadius.circular(8)),
-              child: Text(gs.status, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFFFFCC66), fontSize: 13)),
+              decoration: BoxDecoration(
+                color: const Color(0xFF111122),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                gs.status,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFFFFCC66), fontSize: 13),
+              ),
             ),
             const SizedBox(height: 10),
-            const Text('Port 41237. Ayni Wi-Fi gerekli. Yayin bulunamazsa IP ile katil.', textAlign: TextAlign.center, style: kSmall),
+            const Text(
+              'Port 41237. Ayni Wi-Fi gerekli. Yayin bulunamazsa IP ile katil.',
+              textAlign: TextAlign.center,
+              style: kSmall,
+            ),
           ],
         ),
       ),
@@ -2313,11 +2648,23 @@ class ScanPage extends StatelessWidget {
         children: [
           Row(
             children: [
-              const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFFB300))),
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Color(0xFFFFB300)),
+              ),
               const SizedBox(width: 10),
-              const Text('ODALAR ARANIYOR...', style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 2)),
+              const Text('ODALAR ARANIYOR...',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800, letterSpacing: 2)),
               const Spacer(),
-              Btn(t: 'GERI', on: () => gs._toMenu('Arama iptal'), expand: false, c: const Color(0xFF555577)),
+              Btn(
+                t: 'GERI',
+                on: () => gs._toMenu('Arama iptal'),
+                expand: false,
+                c: const Color(0xFF555577),
+              ),
             ],
           ),
           const SizedBox(height: 6),
@@ -2325,31 +2672,53 @@ class ScanPage extends StatelessWidget {
           const SizedBox(height: 10),
           Expanded(
             child: hosts.isEmpty
-                ? const Center(child: Text('Henuz oda yok. Bir cihaz HOST OL ile oda acsin.', textAlign: TextAlign.center, style: kTxt))
+                ? const Center(
+                    child: Text(
+                      'Henuz oda yok. Bir cihaz HOST OL ile oda acsin.',
+                      textAlign: TextAlign.center,
+                      style: kTxt,
+                    ),
+                  )
                 : ListView.separated(
                     itemCount: hosts.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, __) {
+                      return const SizedBox(height: 8);
+                    },
                     itemBuilder: (_, i) {
                       final h = hosts[i];
+                      final mp = h.map.clamp(0, MAPS.length - 1);
                       return GestureDetector(
                         onTap: () => gs.joinFound(h),
                         child: Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: const Color(0xFF151530), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFF333366))),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF151530),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: const Color(0xFF333366)),
+                          ),
                           child: Row(
                             children: [
-                              const Icon(Icons.meeting_room, color: Color(0xFFFFB300)),
+                              const Icon(Icons.meeting_room,
+                                  color: Color(0xFFFFB300)),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
-                                    Text('${h.name} odasi', style: const TextStyle(fontWeight: FontWeight.w700)),
-                                    Text('${h.addr.address} - ${h.count}/4 - ${MAPS[h.map.clamp(0, MAPS.length - 1)].name}', style: kSmall),
+                                    Text('${h.name} odasi',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700)),
+                                    Text(
+                                      '${h.addr.address} - ${h.count}/4 - ${MAPS[mp].name}',
+                                      style: kSmall,
+                                    ),
                                   ],
                                 ),
                               ),
-                              chip('KATIL', const Color(0xFF2ECC71), on: true),
+                              chip('KATIL', const Color(0xFF2ECC71),
+                                  on: true),
                             ],
                           ),
                         ),
@@ -2369,6 +2738,7 @@ class LobbyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isHost = gs.isHost;
+    final guardTaken = gs.rows.any((r) => r.sel == 'G');
     return Padding(
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -2376,13 +2746,23 @@ class LobbyPage extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text('LOBI', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 2, color: Color(0xFFFFB300))),
+              const Text('LOBI',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                    color: Color(0xFFFFB300))),
               const Spacer(),
-              Btn(t: 'CIK', on: () => gs.leaveRoom(), expand: false, c: const Color(0xFF922B21)),
+              Btn(t: 'CIK', on: () => gs.leaveRoom(),
+                  expand: false, c: const Color(0xFF922B21)),
             ],
           ),
-          if (gs.localIp.isNotEmpty) Text('Bu cihazin IP: ${gs.localIp}', style: kSmall),
-          if (gs.status.isNotEmpty) Text(gs.status, style: const TextStyle(color: Color(0xFFFFCC66), fontSize: 12)),
+          if (gs.localIp.isNotEmpty)
+            Text('Bu cihazin IP: ${gs.localIp}', style: kSmall),
+          if (gs.status.isNotEmpty)
+            Text(gs.status,
+                style: const TextStyle(
+                  color: Color(0xFFFFCC66), fontSize: 12)),
           const SizedBox(height: 8),
           const Text('HARITA (host secer):', style: kSmall),
           const SizedBox(height: 4),
@@ -2391,7 +2771,11 @@ class LobbyPage extends StatelessWidget {
               for (int i = 0; i < MAPS.length; i++)
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(onTap: isHost ? () => gs.setMap(i) : null, child: chip(MAPS[i].name, const Color(0xFF3498DB), on: gs.mapIdx == i)),
+                  child: GestureDetector(
+                    onTap: isHost ? () => gs.setMap(i) : null,
+                    child: chip(MAPS[i].name,
+                        const Color(0xFF3498DB), on: gs.mapIdx == i),
+                  ),
                 ),
             ],
           ),
@@ -2406,14 +2790,28 @@ class LobbyPage extends StatelessWidget {
                 for (final p in gs.rows)
                   Container(
                     margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(color: const Color(0xFF151530), borderRadius: BorderRadius.circular(10), border: Border.all(color: p.sel == 'G' ? const Color(0xFFF1C40F) : const Color(0xFF333366))),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF151530),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: p.sel == 'G'
+                            ? const Color(0xFFF1C40F)
+                            : const Color(0xFF333366)),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('${p.host ? '*' : ''}${p.name}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                        Text(p.sel == 'G' ? 'GUVERDIN' : (p.sel.startsWith('C') ? CHARS[int.tryParse(p.sel.substring(1)) ?? 0].name : 'secim yok'), style: const TextStyle(fontSize: 11, color: Color(0xFF9999CC))),
+                        Text('${p.host ? '*' : ''}${p.name}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13)),
+                        Text(_selName(p.sel),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF9999CC))),
                       ],
                     ),
                   ),
@@ -2421,7 +2819,8 @@ class LobbyPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text('KARAKTER SEC (ilk kutu = GUVERDIN):', style: kSmall),
+          const Text('KARAKTER SEC (ilk kutu = GUVERDIN):',
+              style: kSmall),
           const SizedBox(height: 6),
           Expanded(
             child: SingleChildScrollView(
@@ -2437,13 +2836,35 @@ class LobbyPage extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFF4D3800).al(0.8),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: gs.mySel == 'G' ? const Color(0xFFF1C40F) : const Color(0xFF555522), width: gs.mySel == 'G' ? 3 : 1),
+                        border: Border.all(
+                          color: gs.mySel == 'G'
+                              ? const Color(0xFFF1C40F)
+                              : const Color(0xFF555522),
+                          width: gs.mySel == 'G' ? 3 : 1,
+                        ),
                       ),
                       child: Column(
                         children: [
-                          const SizedBox(height: 58, child: Center(child: Icon(Icons.security, size: 44, color: Color(0xFFF1C40F)))),
-                          const Text('GUVERDIN', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: Color(0xFFF1C40F))),
-                          Text(gs.rows.any((r) => r.sel == 'G') && gs.mySel != 'G' ? 'dolu' : 'sen ol', style: const TextStyle(fontSize: 9, color: Color(0xFFAA9955))),
+                          const SizedBox(
+                            height: 58,
+                            child: Center(
+                              child: Icon(Icons.security,
+                                  size: 44,
+                                  color: Color(0xFFF1C40F)),
+                            ),
+                          ),
+                          const Text('GUVERDIN',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11,
+                                color: Color(0xFFF1C40F))),
+                          Text(
+                            guardTaken && gs.mySel != 'G'
+                                ? 'dolu' : 'sen ol',
+                            style: const TextStyle(
+                              fontSize: 9,
+                              color: Color(0xFFAA9955)),
+                          ),
                         ],
                       ),
                     ),
@@ -2457,13 +2878,33 @@ class LobbyPage extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: const Color(0xFF12122A),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: gs.mySel == 'C$i' ? CHARS[i].color : const Color(0xFF333355), width: gs.mySel == 'C$i' ? 3 : 1),
+                          border: Border.all(
+                            color: gs.mySel == 'C$i'
+                                ? CHARS[i].color
+                                : const Color(0xFF333355),
+                            width: gs.mySel == 'C$i' ? 3 : 1,
+                          ),
                         ),
                         child: Column(
                           children: [
-                            SizedBox(height: 58, child: CustomPaint(size: const Size(90, 58), painter: AnimPrev(ch: i))),
-                            Text(CHARS[i].name, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: CHARS[i].color)),
-                            Text('${CHARS[i].active}/${CHARS[i].passive}', style: const TextStyle(fontSize: 9, color: Color(0xFF8888AA))),
+                            SizedBox(
+                              height: 58,
+                              child: CustomPaint(
+                                size: const Size(90, 58),
+                                painter: AnimPrev(ch: i),
+                              ),
+                            ),
+                            Text(CHARS[i].name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11,
+                                  color: CHARS[i].color)),
+                            Text(
+                              '${CHARS[i].active}/${CHARS[i].passive}',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                color: Color(0xFF8888AA)),
+                            ),
                           ],
                         ),
                       ),
@@ -2476,17 +2917,32 @@ class LobbyPage extends StatelessWidget {
           if (isHost)
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: gs.rows.length >= 2 ? const Color(0xFF1E8449) : const Color(0xFF333344),
+                backgroundColor: gs.rows.length >= 2
+                    ? const Color(0xFF1E8449)
+                    : const Color(0xFF333344),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               onPressed: gs.rows.length >= 2 ? () => gs.startGame() : null,
-              child: Text('OYUNU BASLAT (${gs.rows.length}/4) - min 2 kisi', style: const TextStyle(fontWeight: FontWeight.w900)),
+              child: Text(
+                'OYUNU BASLAT (${gs.rows.length}/4) - min 2 kisi',
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
             )
           else
-            const Text('Hostun baslatmasi bekleniyor...', textAlign: TextAlign.center, style: kTxt),
+            const Text('Hostun baslatmasi bekleniyor...',
+                textAlign: TextAlign.center, style: kTxt),
         ],
       ),
     );
+  }
+
+  String _selName(String sel) {
+    if (sel == 'G') return 'GUVERDIN';
+    if (sel.startsWith('C')) {
+      final i = int.tryParse(sel.substring(1)) ?? 0;
+      return CHARS[i.clamp(0, CHARS.length - 1)].name;
+    }
+    return 'secim yok';
   }
 }
 
@@ -2495,7 +2951,7 @@ class SoloPage extends StatelessWidget {
   const SoloPage({super.key, required this.gs});
   @override
   Widget build(BuildContext context) {
-    final diffs = ['KOLAY', 'NORMAL', 'KABUS'];
+    const diffs = ['KOLAY', 'NORMAL', 'KABUS'];
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -2503,13 +2959,22 @@ class SoloPage extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text('TEK KISILIK YZ', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 2, color: Color(0xFFFFB300))),
+              const Text('TEK KISILIK YZ',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                    color: Color(0xFFFFB300))),
               const Spacer(),
-              Btn(t: 'GERI', on: () => gs._toMenu('Hazir'), expand: false, c: const Color(0xFF555577)),
+              Btn(t: 'GERI', on: () => gs._toMenu('Hazir'),
+                  expand: false, c: const Color(0xFF555577)),
             ],
           ),
           const SizedBox(height: 8),
-          const Text('Sen guvenlik sin. YZ animatronikler seni avlar. Sabah 6 ya kadar hayatta kal.', style: kTxt),
+          const Text(
+            'Sen guvenliksin. YZ animatronikler seni avlar. Sabah 6 ya kadar hayatta kal.',
+            style: kTxt,
+          ),
           const SizedBox(height: 16),
           const Text('ZORLUK:', style: kSmall),
           const SizedBox(height: 6),
@@ -2523,7 +2988,8 @@ class SoloPage extends StatelessWidget {
                       gs.soloDiff = i;
                       gs.notifyListeners();
                     },
-                    child: chip(diffs[i], const Color(0xFFE74C3C), on: gs.soloDiff == i),
+                    child: chip(diffs[i],
+                        const Color(0xFFE74C3C), on: gs.soloDiff == i),
                   ),
                 ),
             ],
@@ -2541,7 +3007,8 @@ class SoloPage extends StatelessWidget {
                       gs.soloCount = i;
                       gs.notifyListeners();
                     },
-                    child: chip('$i', const Color(0xFF8E44AD), on: gs.soloCount == i),
+                    child: chip('$i', const Color(0xFF8E44AD),
+                        on: gs.soloCount == i),
                   ),
                 ),
             ],
@@ -2559,16 +3026,22 @@ class SoloPage extends StatelessWidget {
                       gs.mapIdx = i;
                       gs.notifyListeners();
                     },
-                    child: chip(MAPS[i].name, const Color(0xFF3498DB), on: gs.mapIdx == i),
+                    child: chip(MAPS[i].name,
+                        const Color(0xFF3498DB), on: gs.mapIdx == i),
                   ),
                 ),
             ],
           ),
           const Spacer(),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E8449), padding: const EdgeInsets.symmetric(vertical: 16)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1E8449),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
             onPressed: () => gs.startSolo(),
-            child: const Text('GECEYE BASLA', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+            child: const Text('GECEYE BASLA',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900, fontSize: 16)),
           ),
         ],
       ),
@@ -2583,7 +3056,8 @@ class GamePage extends StatefulWidget {
   State<GamePage> createState() => _GamePageState();
 }
 
-class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin {
+class _GamePageState extends State<GamePage>
+    with SingleTickerProviderStateMixin {
   late AnimationController c;
   Duration? lastD;
 
@@ -2596,7 +3070,10 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
 
   void _tick() {
     final d = c.lastElapsedDuration;
-    final dt = lastD == null ? 0.016 : m.min(0.05, (d - lastD!).inMicroseconds / 1000000);
+    double dt = 0.016;
+    if (lastD != null) {
+      dt = m.min(0.05, (d - lastD!).inMicroseconds / 1000000);
+    }
     lastD = d;
     widget.gs.frame(dt);
   }
@@ -2620,13 +3097,28 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
             Positioned.fill(
               child: Transform.translate(
                 offset: Offset(gs.shakeX, gs.shakeY),
-                child: gs.myRole == 'G' ? _buildGuard(gs, vf, now) : _buildAnim(gs, vf, now),
+                child: gs.myRole == 'G'
+                    ? _buildGuard(gs, vf, now)
+                    : _buildAnim(gs, vf, now),
               ),
             ),
-            if (vf.blind > 0) Positioned.fill(child: Container(color: Colors.white.al(m.min(0.85, vf.blind)))),
-            if (gs.jsOn) Positioned.fill(child: JsOverlay(ch: gs.overJs, t: gs.jsT))
+            if (vf.blind > 0)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.white.al(m.min(0.85, vf.blind)),
+                ),
+              ),
+            if (gs.jsOn)
+              Positioned.fill(child: JsOverlay(ch: gs.overJs, t: gs.jsT))
             else if (gs.over)
-              Positioned.fill(child: Container(color: (gs.overSide == 'anim' ? const Color(0xFFFF2200) : const Color(0xFF22FF88)).al(0.12 + 0.1 * m.sin(gs.endDelay * 12).abs()))),
+              Positioned.fill(
+                child: Container(
+                  color: (gs.overSide == 'anim'
+                          ? const Color(0xFFFF2200)
+                          : const Color(0xFF22FF88))
+                      .al(0.12 + 0.1 * m.sin(gs.endDelay * 12).abs()),
+                ),
+              ),
           ],
         );
       },
@@ -2635,15 +3127,39 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
 
   Widget _buildGuard(Net gs, VF vf, int now) {
     final jammed = vf.cam && vf.jam > 0;
+    final pulse = 0.6 + 0.4 * m.sin(now / 90);
     return Stack(
       children: [
         Positioned.fill(
           child: vf.cam && !vf.black
-              ? CustomPaint(painter: MapP(map: gs.curMap, vf: vf, camMode: true, myPid: gs.myPid, t: vf.t, jam: jammed))
-              : CustomPaint(painter: OfficeP(vf: vf, dlShow: gs.dlShow, drShow: gs.drShow, fanA: gs.fanA, t: now / 1000)),
+              ? CustomPaint(
+                  painter: MapP(
+                    map: gs.curMap,
+                    vf: vf,
+                    camMode: true,
+                    myPid: gs.myPid,
+                    t: vf.t,
+                    jam: jammed,
+                  ),
+                )
+              : CustomPaint(
+                  painter: OfficeP(
+                    vf: vf,
+                    dlShow: gs.dlShow,
+                    drShow: gs.drShow,
+                    fanA: gs.fanA,
+                    t: now / 1000,
+                  ),
+                ),
         ),
-        Positioned.fill(child: CustomPaint(painter: NoiseP(seed: now ~/ 60, heavy: vf.cam, jam: jammed))),
-        Positioned.fill(child: const CustomPaint(painter: VignetteP())),
+        Positioned.fill(
+          child: CustomPaint(
+            painter: NoiseP(seed: now ~/ 60, heavy: vf.cam, jam: jammed),
+          ),
+        ),
+        Positioned.fill(
+          child: const CustomPaint(painter: VignetteP()),
+        ),
         Positioned(
           top: 8,
           left: 10,
@@ -2654,24 +3170,65 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(kHours[vf.hour.clamp(0, 6)], style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white, shadows: [Shadow(blurRadius: 6, color: Colors.black)])),
-                  Text(vf.black ? 'KARANLIK!' : 'GECE VARDIYASI', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: vf.black ? Colors.red : const Color(0xFFAAAAEE))),
+                  Text(
+                    kHours[vf.hour.clamp(0, 6)],
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(blurRadius: 6, color: Colors.black)
+                      ],
+                    ),
+                  ),
+                  Text(
+                    vf.black ? 'KARANLIK!' : 'GECE VARDIYASI',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: vf.black
+                          ? Colors.red
+                          : const Color(0xFFAAAAEE),
+                    ),
+                  ),
                 ],
               ),
               const Spacer(),
               if (vf.cam)
                 Row(
                   children: [
-                    Container(width: 10, height: 10, decoration: BoxDecoration(color: (vf.t % 1 < 0.6) ? Colors.red : Colors.transparent, shape: BoxShape.circle)),
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: (vf.t % 1 < 0.6)
+                            ? Colors.red
+                            : Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                     const SizedBox(width: 4),
-                    const Text('REC', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w900, fontSize: 12)),
+                    const Text('REC',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12)),
                   ],
                 ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('GUC %${vf.power.toInt()}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: vf.power < 25 ? Colors.red : const Color(0xFF7CFC00))),
+                  Text(
+                    'GUC %${vf.power.toInt()}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: vf.power < 25
+                          ? Colors.red
+                          : const Color(0xFF7CFC00),
+                    ),
+                  ),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -2680,7 +3237,13 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
                           width: 7,
                           height: 13,
                           margin: const EdgeInsets.only(left: 2),
-                          color: i < vf.usage ? (vf.usage >= 5 ? Colors.red : vf.usage >= 3 ? Colors.orange : Colors.green) : const Color(0xFF222233),
+                          color: i < vf.usage
+                              ? (vf.usage >= 5
+                                  ? Colors.red
+                                  : vf.usage >= 3
+                                      ? Colors.orange
+                                      : Colors.green)
+                              : const Color(0xFF222233),
                         ),
                     ],
                   ),
@@ -2690,26 +3253,121 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
           ),
         ),
         if (vf.forceL > 0 || vf.waitL > 1.5)
-          Positioned(top: 66, left: 0, right: 0, child: Center(child: Text('SOL KAPI ${vf.forceL > 0 ? 'ZORLANIYOR!' : 'TEHLIKE!'}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.red.al(0.6 + 0.4 * m.sin(now / 90))))),
+          Positioned(
+            top: 66,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'SOL KAPI ${vf.forceL > 0 ? 'ZORLANIYOR!' : 'TEHLIKE!'}',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.red.al(pulse),
+                ),
+              ),
+            ),
+          ),
         if (vf.forceR > 0 || vf.waitR > 1.5)
-          Positioned(top: 86, left: 0, right: 0, child: Center(child: Text('SAG KAPI ${vf.forceR > 0 ? 'ZORLANIYOR!' : 'TEHLIKE!'}', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.red.al(0.6 + 0.4 * m.sin(now / 90))))),
-        if (vf.black) const Positioned(top: 120, left: 0, right: 0, child: Center(child: Text('GUC BITTI - KONTROLLER KILITLENDI', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 2))),
-        if (jammed) const Positioned(top: 150, left: 0, right: 0, child: Center(child: Text('SINYAL YOK', style: TextStyle(color: Color(0xFF66FF66), fontWeight: FontWeight.w900, fontSize: 20, letterSpacing: 4))),
+          Positioned(
+            top: 86,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'SAG KAPI ${vf.forceR > 0 ? 'ZORLANIYOR!' : 'TEHLIKE!'}',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.red.al(pulse),
+                ),
+              ),
+            ),
+          ),
+        if (vf.black)
+          const Positioned(
+            top: 120,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'GUC BITTI - KONTROLLER KILITLENDI',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                  letterSpacing: 2,
+                ),
+              ),
+            ),
+          ),
+        if (jammed)
+          const Positioned(
+            top: 150,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'SINYAL YOK',
+                style: TextStyle(
+                  color: Color(0xFF66FF66),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 20,
+                  letterSpacing: 4,
+                ),
+              ),
+            ),
+          ),
         Positioned(
           bottom: 8,
           left: 8,
           right: 8,
           child: Row(
             children: [
-              Btn(t: 'SOL KAPI', sub: vf.ddL > 0 ? 'KILIT ${vf.ddL.toStringAsFixed(1)}' : (vf.dl ? 'ACIK' : 'KAPALI'), c: vf.dl ? const Color(0xFF1E8449) : const Color(0xFF922B21), on: vf.black || vf.ddL > 0 ? null : () => gs.gAct('dl')),
+              Btn(
+                t: 'SOL KAPI',
+                sub: vf.ddL > 0
+                    ? 'KILIT ${vf.ddL.toStringAsFixed(1)}'
+                    : (vf.dl ? 'ACIK' : 'KAPALI'),
+                c: vf.dl
+                    ? const Color(0xFF1E8449)
+                    : const Color(0xFF922B21),
+                on: vf.black || vf.ddL > 0 ? null : () => gs.gAct('dl'),
+              ),
               const SizedBox(width: 6),
-              Btn(t: 'ISIK', sub: vf.light ? 'ACIK' : 'KAPALI', c: const Color(0xFFB7950B), on: vf.black ? null : () => gs.gAct('li')),
+              Btn(
+                t: 'ISIK',
+                sub: vf.light ? 'ACIK' : 'KAPALI',
+                c: const Color(0xFFB7950B),
+                on: vf.black ? null : () => gs.gAct('li'),
+              ),
               const SizedBox(width: 6),
-              Btn(t: 'KAMERA', sub: vf.cam ? 'ACIK' : 'KAPALI', c: const Color(0xFF1F618D), on: vf.black || (vf.jam > 0 && !vf.cam) ? null : () => gs.gAct('cm')),
+              Btn(
+                t: 'KAMERA',
+                sub: vf.cam ? 'ACIK' : 'KAPALI',
+                c: const Color(0xFF1F618D),
+                on: vf.black || (vf.jam > 0 && !vf.cam)
+                    ? null
+                    : () => gs.gAct('cm'),
+              ),
               const SizedBox(width: 6),
-              Btn(t: 'VENT', sub: vf.vent ? 'ACIK' : 'KAPALI', c: const Color(0xFF148F77), on: vf.black ? null : () => gs.gAct('vt')),
+              Btn(
+                t: 'VENT',
+                sub: vf.vent ? 'ACIK' : 'KAPALI',
+                c: const Color(0xFF148F77),
+                on: vf.black ? null : () => gs.gAct('vt'),
+              ),
               const SizedBox(width: 6),
-              Btn(t: 'SAG KAPI', sub: vf.ddR > 0 ? 'KILIT ${vf.ddR.toStringAsFixed(1)}' : (vf.dr ? 'ACIK' : 'KAPALI'), c: vf.dr ? const Color(0xFF1E8449) : const Color(0xFF922B21), on: vf.black || vf.ddR > 0 ? null : () => gs.gAct('dr')),
+              Btn(
+                t: 'SAG KAPI',
+                sub: vf.ddR > 0
+                    ? 'KILIT ${vf.ddR.toStringAsFixed(1)}'
+                    : (vf.dr ? 'ACIK' : 'KAPALI'),
+                c: vf.dr
+                    ? const Color(0xFF1E8449)
+                    : const Color(0xFF922B21),
+                on: vf.black || vf.ddR > 0 ? null : () => gs.gAct('dr'),
+              ),
             ],
           ),
         ),
@@ -2727,12 +3385,30 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
     }
     final ctx = gs.ctxLabel(vf);
     final cd = me?.cd ?? 0.0;
-    final cdMax = CHARS[gs.myChar.clamp(0, CHARS.length - 1)].cd;
+    final ci = gs.myChar.clamp(0, CHARS.length - 1);
+    final cdMax = CHARS[ci].cd;
     return Stack(
       children: [
-        Positioned.fill(child: CustomPaint(painter: MapP(map: gs.curMap, vf: vf, camMode: false, myPid: gs.myPid, t: vf.t, jam: false))),
-        Positioned.fill(child: CustomPaint(painter: NoiseP(seed: now ~/ 90, heavy: false, jam: false))),
-        Positioned.fill(child: const CustomPaint(painter: VignetteP())),
+        Positioned.fill(
+          child: CustomPaint(
+            painter: MapP(
+              map: gs.curMap,
+              vf: vf,
+              camMode: false,
+              myPid: gs.myPid,
+              t: vf.t,
+              jam: false,
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: CustomPaint(
+            painter: NoiseP(seed: now ~/ 90, heavy: false, jam: false),
+          ),
+        ),
+        Positioned.fill(
+          child: const CustomPaint(painter: VignetteP()),
+        ),
         Positioned(
           top: 8,
           left: 10,
@@ -2742,24 +3418,64 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(kHours[vf.hour.clamp(0, 6)], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
-                  Text(CHARS[gs.myChar.clamp(0, CHARS.length - 1)].name, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: CHARS[gs.myChar.clamp(0, CHARS.length - 1)].color)),
+                  Text(kHours[vf.hour.clamp(0, 6)],
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white)),
+                  Text(CHARS[ci].name,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: CHARS[ci].color)),
                 ],
               ),
               const Spacer(),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('GUC %${vf.power.toInt()}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: vf.power < 25 ? Colors.red : const Color(0xFF7CFC00))),
-                  Text('SOL:${vf.dl ? 'ACIK' : 'KAPALI'} SAG:${vf.dr ? 'ACIK' : 'KAPALI'} VENT:${vf.vent ? 'ACIK' : 'KAPALI'}', style: const TextStyle(fontSize: 10, color: Color(0xFFAAAADD))),
+                  Text('GUC %${vf.power.toInt()}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: vf.power < 25
+                            ? Colors.red
+                            : const Color(0xFF7CFC00))),
+                  Text(
+                    'SOL:${vf.dl ? 'ACIK' : 'KAPALI'} '
+                    'SAG:${vf.dr ? 'ACIK' : 'KAPALI'} '
+                    'VENT:${vf.vent ? 'ACIK' : 'KAPALI'}',
+                    style: const TextStyle(
+                      fontSize: 10, color: Color(0xFFAAAADD)),
+                  ),
                 ],
               ),
             ],
           ),
         ),
         if (me != null && me.stun > 0)
-          Positioned(top: 0, bottom: 0, left: 0, right: 0, child: Center(child: Text('SERSEMLEDIN ${me.stun.toStringAsFixed(1)} sn', style: const TextStyle(color: Color(0xFFFFEE55), fontSize: 24, fontWeight: FontWeight.w900, shadows: [Shadow(blurRadius: 10, color: Colors.black)]))),
-        Positioned(bottom: 20, left: 16, child: Joy(onVec: gs.sendJoy)),
+          Positioned(
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Text(
+                'SERSEMLEDIN ${me.stun.toStringAsFixed(1)} sn',
+                style: const TextStyle(
+                  color: Color(0xFFFFEE55),
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  shadows: [Shadow(blurRadius: 10, color: Colors.black)],
+                ),
+              ),
+            ),
+          ),
+        Positioned(
+          bottom: 20,
+          left: 16,
+          child: Joy(onVec: gs.sendJoy),
+        ),
         Positioned(
           bottom: 24,
           right: 16,
@@ -2771,9 +3487,19 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
                 GestureDetector(
                   onTap: gs.doCtx,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                    decoration: BoxDecoration(color: const Color(0xFFC0392B).al(0.85), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white54, width: 2)),
-                    child: Text(ctx, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 22, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFC0392B).al(0.85),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Colors.white54, width: 2),
+                    ),
+                    child: Text(ctx,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white)),
                   ),
                 ),
               const SizedBox(height: 12),
@@ -2784,10 +3510,45 @@ class _GamePageState extends State<GamePage> with SingleTickerProviderStateMixin
                   height: 86,
                   child: Stack(
                     children: [
-                      Positioned.fill(child: Container(decoration: BoxDecoration(shape: BoxShape.circle, color: CHARS[gs.myChar.clamp(0, CHARS.length - 1)].color.al(cd > 0 ? 0.2 : 0.75), border: Border.all(color: CHARS[gs.myChar.clamp(0, CHARS.length - 1)].color, width: 2)))),
-                      Positioned.fill(child: CustomPaint(painter: ArcP(frac: cdMax > 0 ? cd / cdMax : 0, col: Colors.black.al(0.65)))),
-                      Center(child: Text(CHARS[gs.myChar.clamp(0, CHARS.length - 1)].active, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white))),
-                      if (cd > 0) Positioned(bottom: 14, left: 0, right: 0, child: Center(child: Text(cd.toStringAsFixed(0), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white70)))),
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: CHARS[ci].color.al(
+                              cd > 0 ? 0.2 : 0.75),
+                            border: Border.all(
+                              color: CHARS[ci].color, width: 2),
+                          ),
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: ArcP(
+                            frac: cdMax > 0 ? cd / cdMax : 0,
+                            col: Colors.black.al(0.65),
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: Text(CHARS[ci].active,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white)),
+                      ),
+                      if (cd > 0)
+                        Positioned(
+                          bottom: 14,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Text(cd.toStringAsFixed(0),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white70)),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -2807,7 +3568,8 @@ class EndPage extends StatefulWidget {
   State<EndPage> createState() => _EndPageState();
 }
 
-class _EndPageState extends State<EndPage> with SingleTickerProviderStateMixin {
+class _EndPageState extends State<EndPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController c;
   bool surpriseOn = false;
   double surpriseT = 0;
@@ -2849,7 +3611,8 @@ class _EndPageState extends State<EndPage> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final gs = widget.gs;
-    final won = (gs.myRole == 'G' && gs.overSide == 'guard') || (gs.myRole == 'A' && gs.overSide == 'anim');
+    final won = (gs.myRole == 'G' && gs.overSide == 'guard') ||
+        (gs.myRole == 'A' && gs.overSide == 'anim');
     return AnimatedBuilder(
       animation: c,
       builder: (context, _) {
@@ -2861,21 +3624,66 @@ class _EndPageState extends State<EndPage> with SingleTickerProviderStateMixin {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (gs.overJs >= 0) SizedBox(height: 170, width: 170, child: CustomPaint(painter: AnimPrev(ch: gs.overJs))),
+                    if (gs.overJs >= 0)
+                      SizedBox(
+                        height: 170,
+                        width: 170,
+                        child: CustomPaint(
+                          painter: AnimPrev(ch: gs.overJs),
+                        ),
+                      ),
                     const SizedBox(height: 10),
-                    Text(won ? 'KAZANDIN!' : 'YAKALANDIN!', style: TextStyle(fontSize: 40, fontWeight: FontWeight.w900, letterSpacing: 4, color: won ? const Color(0xFF2ECC71) : const Color(0xFFE74C3C))),
+                    Text(
+                      won ? 'KAZANDIN!' : 'YAKALANDIN!',
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 4,
+                        color: won
+                            ? const Color(0xFF2ECC71)
+                            : const Color(0xFFE74C3C)),
+                    ),
                     const SizedBox(height: 10),
-                    Text(gs.overReason, textAlign: TextAlign.center, style: kTxt),
+                    Text(gs.overReason,
+                        textAlign: TextAlign.center, style: kTxt),
                     const SizedBox(height: 8),
-                    Text(gs.myRole == 'G' ? 'Rol: GUVERDIN' : 'Rol: ${CHARS[gs.myChar.clamp(0, CHARS.length - 1)].name}', style: kSmall),
-                    if (gs.surprise && surpriseFired) const Padding(padding: EdgeInsets.only(top: 10), child: Text('SENI GORUYORUZ...', style: TextStyle(color: Color(0xFFFF3333), fontWeight: FontWeight.w900, letterSpacing: 3))),
+                    Text(
+                      gs.myRole == 'G'
+                          ? 'Rol: GUVERDIN'
+                          : 'Rol: ${CHARS[gs.myChar.clamp(0, CHARS.length - 1)].name}',
+                      style: kSmall,
+                    ),
+                    if (gs.surprise && surpriseFired)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 10),
+                        child: Text(
+                          'SENI GORUYORUZ...',
+                          style: TextStyle(
+                            color: Color(0xFFFF3333),
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 3),
+                        ),
+                      ),
                     const SizedBox(height: 26),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (gs.isHost && !gs.aiMode) Btn(t: 'LOBIYE DON', sub: 'revans', on: () => gs.toLobbyAll(), expand: false, c: const Color(0xFF1F618D)),
-                        if (gs.isHost && !gs.aiMode) const SizedBox(width: 10),
-                        Btn(t: 'ANA MENU', on: () => gs.leaveRoom(), expand: false, c: const Color(0xFF555577)),
+                        if (gs.isHost && !gs.aiMode)
+                          Btn(
+                            t: 'LOBIYE DON',
+                            sub: 'revans',
+                            on: () => gs.toLobbyAll(),
+                            expand: false,
+                            c: const Color(0xFF1F618D),
+                          ),
+                        if (gs.isHost && !gs.aiMode)
+                          const SizedBox(width: 10),
+                        Btn(
+                          t: 'ANA MENU',
+                          on: () => gs.leaveRoom(),
+                          expand: false,
+                          c: const Color(0xFF555577),
+                        ),
                       ],
                     ),
                   ],
@@ -2888,14 +3696,30 @@ class _EndPageState extends State<EndPage> with SingleTickerProviderStateMixin {
                   color: Colors.black,
                   child: Stack(
                     children: [
-                      Positioned.fill(child: CustomPaint(painter: NoiseP(seed: (surpriseT * 60).toInt(), heavy: true, jam: true))),
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: NoiseP(
+                            seed: (surpriseT * 60).toInt(),
+                            heavy: true,
+                            jam: true,
+                          ),
+                        ),
+                      ),
                       Center(
                         child: Transform.scale(
                           scale: 0.6 + surpriseT * 1.4,
-                          child: CustomPaint(size: const Size(300, 300), painter: AnimPrev(ch: 11)),
+                          child: CustomPaint(
+                            size: const Size(300, 300),
+                            painter: AnimPrev(ch: 11),
+                          ),
                         ),
                       ),
-                      Positioned.fill(child: Container(color: Colors.red.al(0.25 + 0.2 * m.sin(surpriseT * 40).abs()))),
+                      Positioned.fill(
+                        child: Container(
+                          color: Colors.red.al(
+                            0.25 + 0.2 * m.sin(surpriseT * 40).abs()),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -2937,7 +3761,11 @@ class _JoyState extends State<Joy> {
         setState(() => v = Offset.zero);
         widget.onVec(0, 0);
       },
-      child: SizedBox(width: size, height: size, child: CustomPaint(painter: JoyP(v: v, rad: rad))),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: CustomPaint(painter: JoyP(v: v, rad: rad)),
+      ),
     );
   }
 }
@@ -2949,11 +3777,25 @@ class JoyP extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final c = Offset(size.width / 2, size.height / 2);
-    canvas.drawCircle(c, rad + 14, Paint()..color = const Color(0xFF11112A).al(0.75));
-    canvas.drawCircle(c, rad + 14, Paint()..style = PaintingStyle.stroke..strokeWidth = 2..color = const Color(0xFF4444AA).al(0.8));
+    canvas.drawCircle(c, rad + 14,
+        Paint()..color = const Color(0xFF11112A).al(0.75));
+    canvas.drawCircle(
+        c,
+        rad + 14,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = const Color(0xFF4444AA).al(0.8));
     canvas.drawCircle(c, 4, Paint()..color = const Color(0xFF4444AA));
-    canvas.drawCircle(c + v, 26, Paint()..color = const Color(0xFF8866FF).al(0.9));
-    canvas.drawCircle(c + v, 26, Paint()..style = PaintingStyle.stroke..strokeWidth = 2..color = Colors.white54);
+    canvas.drawCircle(c + v, 26,
+        Paint()..color = const Color(0xFF8866FF).al(0.9));
+    canvas.drawCircle(
+        c + v,
+        26,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..color = Colors.white54);
   }
 
   @override
@@ -2967,8 +3809,12 @@ class ArcP extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (frac <= 0) return;
-    final r = Rect.fromCircle(center: Offset(size.width / 2, size.height / 2), radius: size.width / 2);
-    canvas.drawArc(r, -m.pi / 2, frac * 2 * m.pi, true, Paint()..color = col);
+    final r = Rect.fromCircle(
+      center: Offset(size.width / 2, size.height / 2),
+      radius: size.width / 2,
+    );
+    canvas.drawArc(r, -m.pi / 2, frac * 2 * m.pi, true,
+        Paint()..color = col);
   }
 
   @override
@@ -2994,20 +3840,26 @@ class JsP extends CustomPainter {
     final r = m.Random((t * 60).toInt());
     canvas.drawRect(Offset.zero & size, Paint()..color = Colors.black);
     final pulse = 0.14 + 0.12 * m.sin(t * 40).abs();
-    canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xFFFF0000).al(pulse));
+    canvas.drawRect(Offset.zero & size,
+        Paint()..color = const Color(0xFFFF0000).al(pulse));
     final p = m.min(1.0, t / 1.7);
     final scale = 0.25 + 1.25 * p * p;
     final s = size.shortestSide * 0.85 * scale;
     final jx = (r.nextDouble() * 2 - 1) * 18;
     final jy = (r.nextDouble() * 2 - 1) * 18;
-    final center = Offset(size.width / 2 + jx, size.height / 2 + jy + s * 0.05);
-    drawAnimatronic(canvas, center, s, ch.clamp(0, CHARS.length - 1), t, scream: true);
+    final center = Offset(
+      size.width / 2 + jx,
+      size.height / 2 + jy + s * 0.05,
+    );
+    drawAnimatronic(canvas, center, s, ch.clamp(0, CHARS.length - 1), t,
+        scream: true);
     for (int i = 0; i < 10; i++) {
       final ang = r.nextDouble() * 2 * m.pi;
       final rr = size.shortestSide * (0.5 + r.nextDouble() * 0.3);
       final p1 = center + Offset(m.cos(ang), m.sin(ang)) * rr;
       final p2 = center + Offset(m.cos(ang), m.sin(ang)) * (rr + 60);
-      canvas.drawLine(p1, p2, Paint()..color = Colors.white.al(0.12)..strokeWidth = 2);
+      canvas.drawLine(p1, p2,
+          Paint()..color = Colors.white.al(0.12)..strokeWidth = 2);
     }
   }
 
@@ -3015,83 +3867,225 @@ class JsP extends CustomPainter {
   bool shouldRepaint(JsP old) => true;
 }
 
-// ============================ ÇİZİM ============================
-void drawAnimatronic(Canvas canvas, Offset o, double s, int ch, double t, {bool dark = false, bool scream = false}) {
+void drawAnimatronic(
+  Canvas canvas,
+  Offset o,
+  double s,
+  int ch,
+  double t, {
+  bool dark = false,
+  bool scream = false,
+}) {
   final cd = CHARS[ch.clamp(0, CHARS.length - 1)];
   final Color body = dark ? const Color(0xFF0A0A10) : cd.color;
-  final Color body2 = dark ? const Color(0xFF0A0A10) : Color.lerp(cd.color, Colors.black, 0.35)!;
-  final Color eye = dark ? const Color(0xFFFFFFFF) : (ch == 5 ? const Color(0xFFFFF6B0) : const Color(0xFFEAF7FF));
-  final glow = Paint()..color = cd.color.al(dark ? 0.25 : 0.5)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
+  final Color body2 = dark
+      ? const Color(0xFF0A0A10)
+      : Color.lerp(cd.color, Colors.black, 0.35)!;
+  final Color eye = dark
+      ? const Color(0xFFFFFFFF)
+      : (ch == 5 ? const Color(0xFFFFF6B0) : const Color(0xFFEAF7FF));
+  final glow = Paint()
+    ..color = cd.color.al(dark ? 0.25 : 0.5)
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
   canvas.drawCircle(o, s * 0.52, glow);
   if (ch == 0) {
     for (final dir in [-1.0, 1.0]) {
       final flap = m.sin(t * 7) * 0.25;
       final wing = Path()
         ..moveTo(o.dx + dir * s * 0.22, o.dy + s * 0.18)
-        ..quadraticBezierTo(o.dx + dir * s * (0.72 + flap), o.dy - s * 0.1, o.dx + dir * s * 0.55, o.dy + s * 0.42)
-        ..quadraticBezierTo(o.dx + dir * s * 0.3, o.dy + s * 0.4, o.dx + dir * s * 0.22, o.dy + s * 0.18)
+        ..quadraticBezierTo(
+          o.dx + dir * s * (0.72 + flap),
+          o.dy - s * 0.1,
+          o.dx + dir * s * 0.55,
+          o.dy + s * 0.42,
+        )
+        ..quadraticBezierTo(
+          o.dx + dir * s * 0.3,
+          o.dy + s * 0.4,
+          o.dx + dir * s * 0.22,
+          o.dy + s * 0.18,
+        )
         ..close();
-      canvas.drawPath(wing, Paint()..color = (dark ? const Color(0xFF0A0A10) : const Color(0xFF873600)).al(0.95));
+      final wc = dark ? const Color(0xFF0A0A10) : const Color(0xFF873600);
+      canvas.drawPath(wing, Paint()..color = wc.al(0.95));
     }
   }
   if (ch == 10) {
     for (int i = 0; i < 3; i++) {
-      canvas.drawOval(Rect.fromCenter(center: Offset(o.dx + (i - 1) * s * 0.16, o.dy + s * (0.52 + i * 0.05)), width: s * 0.3, height: s * 0.16), Paint()..color = body.al(0.25 - i * 0.06));
+      final cen = Offset(
+        o.dx + (i - 1) * s * 0.16,
+        o.dy + s * (0.52 + i * 0.05),
+      );
+      canvas.drawOval(
+        Rect.fromCenter(center: cen, width: s * 0.3, height: s * 0.16),
+        Paint()..color = body.al(0.25 - i * 0.06),
+      );
     }
   }
-  canvas.drawOval(Rect.fromCenter(center: Offset(o.dx, o.dy + s * 0.32), width: s * 0.6, height: s * 0.52), Paint()..color = body2);
-  canvas.drawOval(Rect.fromCenter(center: Offset(o.dx, o.dy + s * 0.34), width: s * 0.34, height: s * 0.3), Paint()..color = (dark ? const Color(0xFF0A0A10) : Color.lerp(cd.color, Colors.white, 0.25)!));
+  canvas.drawOval(
+    Rect.fromCenter(
+      center: Offset(o.dx, o.dy + s * 0.32),
+      width: s * 0.6,
+      height: s * 0.52,
+    ),
+    Paint()..color = body2,
+  );
+  final inner = dark
+      ? const Color(0xFF0A0A10)
+      : Color.lerp(cd.color, Colors.white, 0.25)!;
+  canvas.drawOval(
+    Rect.fromCenter(
+      center: Offset(o.dx, o.dy + s * 0.34),
+      width: s * 0.34,
+      height: s * 0.3,
+    ),
+    Paint()..color = inner,
+  );
   if (ch == 2) {
     for (final dir in [-1.0, 1.0]) {
-      canvas.drawCircle(Offset(o.dx + dir * s * 0.26, o.dy - s * 0.42), s * 0.16, Paint()..color = body);
-      canvas.drawCircle(Offset(o.dx + dir * s * 0.26, o.dy - s * 0.42), s * 0.08, Paint()..color = dark ? const Color(0xFF0A0A10) : const Color(0xFFE8A0B4));
+      final ec = Offset(o.dx + dir * s * 0.26, o.dy - s * 0.42);
+      canvas.drawCircle(ec, s * 0.16, Paint()..color = body);
+      final ic = dark ? const Color(0xFF0A0A10) : const Color(0xFFE8A0B4);
+      canvas.drawCircle(ec, s * 0.08, Paint()..color = ic);
     }
   }
   if (ch == 7) {
     for (int i = 0; i < 5; i++) {
       final ang = -m.pi * 0.85 + i * (m.pi * 0.7 / 4);
-      final p1 = Offset(o.dx + m.cos(ang) * s * 0.3, o.dy - s * 0.18 + m.sin(ang) * s * 0.3);
-      final p2 = Offset(o.dx + m.cos(ang) * s * 0.46, o.dy - s * 0.18 + m.sin(ang) * s * 0.46);
-      final p3 = Offset(o.dx + m.cos(ang + 0.25) * s * 0.3, o.dy - s * 0.18 + m.sin(ang + 0.25) * s * 0.3);
-      canvas.drawPath(Path()..moveTo(p1.dx, p1.dy)..lineTo(p2.dx, p2.dy)..lineTo(p3.dx, p3.dy)..close(), Paint()..color = body);
+      final p1 = Offset(
+        o.dx + m.cos(ang) * s * 0.3,
+        o.dy - s * 0.18 + m.sin(ang) * s * 0.3,
+      );
+      final p2 = Offset(
+        o.dx + m.cos(ang) * s * 0.46,
+        o.dy - s * 0.18 + m.sin(ang) * s * 0.46,
+      );
+      final p3 = Offset(
+        o.dx + m.cos(ang + 0.25) * s * 0.3,
+        o.dy - s * 0.18 + m.sin(ang + 0.25) * s * 0.3,
+      );
+      canvas.drawPath(
+        Path()
+          ..moveTo(p1.dx, p1.dy)
+          ..lineTo(p2.dx, p2.dy)
+          ..lineTo(p3.dx, p3.dy)
+          ..close(),
+        Paint()..color = body,
+      );
     }
   }
   if (ch == 11) {
-    canvas.drawArc(Rect.fromCenter(center: Offset(o.dx, o.dy - s * 0.34), width: s * 0.5, height: s * 0.4), m.pi * 0.95, m.pi * 1.1, false, Paint()..style = PaintingStyle.stroke..strokeWidth = s * 0.09..color = dark ? const Color(0xFF0A0A10) : const Color(0xFF641E16));
-    canvas.drawCircle(Offset(o.dx + s * 0.05, o.dy - s * 0.52), s * 0.07, Paint()..color = Colors.white.al(dark ? 0.4 : 1));
+    final hatR = Rect.fromCenter(
+      center: Offset(o.dx, o.dy - s * 0.34),
+      width: s * 0.5,
+      height: s * 0.4,
+    );
+    final hatC = dark ? const Color(0xFF0A0A10) : const Color(0xFF641E16);
+    canvas.drawArc(hatR, m.pi * 0.95, m.pi * 1.1, false,
+        Paint()..style = PaintingStyle.stroke..strokeWidth = s * 0.09..color = hatC);
+    canvas.drawCircle(
+      Offset(o.dx + s * 0.05, o.dy - s * 0.52),
+      s * 0.07,
+      Paint()..color = Colors.white.al(dark ? 0.4 : 1),
+    );
   }
-  canvas.drawOval(Rect.fromCenter(center: Offset(o.dx, o.dy - s * 0.16), width: s * 0.56, height: s * 0.5), Paint()..color = body);
+  canvas.drawOval(
+    Rect.fromCenter(
+      center: Offset(o.dx, o.dy - s * 0.16),
+      width: s * 0.56,
+      height: s * 0.5,
+    ),
+    Paint()..color = body,
+  );
   if (ch == 4) {
-    canvas.drawLine(Offset(o.dx, o.dy - s * 0.4), Offset(o.dx, o.dy - s * 0.62), Paint()..color = body2..strokeWidth = s * 0.03);
+    canvas.drawLine(
+      Offset(o.dx, o.dy - s * 0.4),
+      Offset(o.dx, o.dy - s * 0.62),
+      Paint()..color = body2..strokeWidth = s * 0.03,
+    );
     final blink = (t % 0.8) < 0.4;
-    canvas.drawCircle(Offset(o.dx, o.dy - s * 0.64), s * 0.045, Paint()..color = blink ? const Color(0xFF2ECC71) : const Color(0xFF145A32)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+    final ac = blink
+        ? const Color(0xFF2ECC71)
+        : const Color(0xFF145A32)
+            .al(1)
+            .al(1);
+    canvas.drawCircle(
+      Offset(o.dx, o.dy - s * 0.64),
+      s * 0.045,
+      Paint()
+        ..color = ac
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
   }
   if (ch == 5) {
-    final halo = Paint()..color = const Color(0xFFFFF6B0).al(0.5)..style = PaintingStyle.stroke..strokeWidth = s * 0.03..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    final halo = Paint()
+      ..color = const Color(0xFFFFF6B0).al(0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = s * 0.03
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawCircle(Offset(o.dx, o.dy - s * 0.1), s * 0.46, halo);
   }
   final blink = (t % 3.1) < 0.12 && !scream;
   for (final dir in [-1.0, 1.0]) {
     final ec = Offset(o.dx + dir * s * 0.12, o.dy - s * 0.2);
     if (blink) {
-      canvas.drawLine(ec - Offset(s * 0.05, 0), ec + Offset(s * 0.05, 0), Paint()..color = eye..strokeWidth = s * 0.02);
+      canvas.drawLine(
+        ec - Offset(s * 0.05, 0),
+        ec + Offset(s * 0.05, 0),
+        Paint()..color = eye..strokeWidth = s * 0.02,
+      );
     } else {
-      canvas.drawCircle(ec, s * (scream ? 0.085 : 0.06), Paint()..color = eye..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7));
+      canvas.drawCircle(
+        ec,
+        s * (scream ? 0.085 : 0.06),
+        Paint()
+          ..color = eye
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
+      );
       canvas.drawCircle(ec, s * 0.025, Paint()..color = Colors.black);
     }
   }
   final mouthW = scream ? 0.4 : 0.22;
   final mouthH = scream ? 0.3 : 0.1;
-  canvas.drawOval(Rect.fromCenter(center: Offset(o.dx, o.dy - s * 0.02), width: s * mouthW, height: s * mouthH), Paint()..color = const Color(0xFF12040A));
+  canvas.drawOval(
+    Rect.fromCenter(
+      center: Offset(o.dx, o.dy - s * 0.02),
+      width: s * mouthW,
+      height: s * mouthH,
+    ),
+    Paint()..color = const Color(0xFF12040A),
+  );
   if (scream || ch == 3 || ch == 7 || ch == 0) {
     final mw = s * mouthW;
     for (int i = 0; i < 5; i++) {
       final tx = o.dx - mw / 2 + mw * (i + 0.5) / 5;
-      canvas.drawPath(Path()..moveTo(tx - s * 0.02, o.dy - s * 0.02 - s * mouthH / 2)..lineTo(tx + s * 0.02, o.dy - s * 0.02 - s * mouthH / 2)..lineTo(tx, o.dy - s * 0.02 - s * mouthH / 2 + s * 0.05)..close(), Paint()..color = const Color(0xFFE8E8E8));
+      final ty = o.dy - s * 0.02 - s * mouthH / 2;
+      canvas.drawPath(
+        Path()
+          ..moveTo(tx - s * 0.02, ty)
+          ..lineTo(tx + s * 0.02, ty)
+          ..lineTo(tx, ty + s * 0.05)
+          ..close(),
+        Paint()..color = const Color(0xFFE8E8E8),
+      );
     }
   }
-  canvas.drawOval(Rect.fromCenter(center: Offset(o.dx - s * 0.13, o.dy + s * 0.58), width: s * 0.18, height: s * 0.09), Paint()..color = body2);
-  canvas.drawOval(Rect.fromCenter(center: Offset(o.dx + s * 0.13, o.dy + s * 0.58), width: s * 0.18, height: s * 0.09), Paint()..color = body2);
+  canvas.drawOval(
+    Rect.fromCenter(
+      center: Offset(o.dx - s * 0.13, o.dy + s * 0.58),
+      width: s * 0.18,
+      height: s * 0.09,
+    ),
+    Paint()..color = body2,
+  );
+  canvas.drawOval(
+    Rect.fromCenter(
+      center: Offset(o.dx + s * 0.13, o.dy + s * 0.58),
+      width: s * 0.18,
+      height: s * 0.09,
+    ),
+    Paint()..color = body2,
+  );
 }
 
 class AnimPrev extends CustomPainter {
@@ -3099,7 +4093,13 @@ class AnimPrev extends CustomPainter {
   AnimPrev({required this.ch});
   @override
   void paint(Canvas canvas, Size size) {
-    drawAnimatronic(canvas, Offset(size.width / 2, size.height * 0.52), size.height * 0.72, ch, 1.2);
+    drawAnimatronic(
+      canvas,
+      Offset(size.width / 2, size.height * 0.52),
+      size.height * 0.72,
+      ch,
+      1.2,
+    );
   }
 
   @override
@@ -3108,8 +4108,17 @@ class AnimPrev extends CustomPainter {
 
 class OfficeP extends CustomPainter {
   final VF vf;
-  final double dlShow, drShow, fanA, t;
-  OfficeP({required this.vf, required this.dlShow, required this.drShow, required this.fanA, required this.t});
+  final double dlShow;
+  final double drShow;
+  final double fanA;
+  final double t;
+  OfficeP({
+    required this.vf,
+    required this.dlShow,
+    required this.drShow,
+    required this.fanA,
+    required this.t,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -3117,15 +4126,45 @@ class OfficeP extends CustomPainter {
     final h = size.height;
     final horizon = h * 0.62;
     final r = m.Random((t * 20).toInt());
-    canvas.drawRect(Rect.fromLTWH(0, 0, w, horizon), Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF1B1030), Color(0xFF0C0716)]).createShader(Rect.fromLTWH(0, 0, w, horizon)));
-    canvas.drawRect(Rect.fromLTWH(0, horizon, w, h - horizon), Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF171021), Color(0xFF040207)]).createShader(Rect.fromLTWH(0, horizon, w, h - horizon)));
-    final tile = Paint()..color = Colors.white.al(0.03)..strokeWidth = 1;
+    final wallR = Rect.fromLTWH(0, 0, w, horizon);
+    canvas.drawRect(
+      wallR,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF1B1030), Color(0xFF0C0716)],
+        ).createShader(wallR),
+    );
+    final floorR = Rect.fromLTWH(0, horizon, w, h - horizon);
+    canvas.drawRect(
+      floorR,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF171021), Color(0xFF040207)],
+        ).createShader(floorR),
+    );
+    final tile = Paint()
+      ..color = Colors.white.al(0.03)
+      ..strokeWidth = 1;
     for (int i = 1; i < 12; i++) {
-      canvas.drawLine(Offset(w * i / 12, 0), Offset(w * i / 12, horizon), tile);
+      canvas.drawLine(
+        Offset(w * i / 12, 0),
+        Offset(w * i / 12, horizon),
+        tile,
+      );
     }
-    final flick = vf.black ? 0.0 : (0.8 + 0.15 * m.sin(t * 13) + 0.05 * r.nextDouble());
+    final flick = vf.black
+        ? 0.0
+        : (0.8 + 0.15 * m.sin(t * 13) + 0.05 * r.nextDouble());
     final lampX = w * 0.5;
-    canvas.drawLine(Offset(lampX, 0), Offset(lampX, h * 0.07), Paint()..color = const Color(0xFF333344)..strokeWidth = 3);
+    canvas.drawLine(
+      Offset(lampX, 0),
+      Offset(lampX, h * 0.07),
+      Paint()..color = const Color(0xFF333344)..strokeWidth = 3,
+    );
     if (!vf.black) {
       final cone = Path()
         ..moveTo(lampX - w * 0.03, h * 0.075)
@@ -3133,8 +4172,29 @@ class OfficeP extends CustomPainter {
         ..lineTo(lampX + w * 0.22, h * 0.95)
         ..lineTo(lampX - w * 0.22, h * 0.95)
         ..close();
-      canvas.drawPath(cone, Paint()..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [const Color(0xFFFFE9A0).al(0.10 * flick), const Color(0xFFFFE9A0).al(0.0)]).createShader(Rect.fromLTWH(0, 0, w, h)));
-      canvas.drawOval(Rect.fromCenter(center: Offset(lampX, h * 0.078), width: w * 0.05, height: h * 0.014), Paint()..color = const Color(0xFFFFE9A0).al(0.9 * flick)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+      final coneC = [
+        const Color(0xFFFFE9A0).al(0.10 * flick),
+        const Color(0xFFFFE9A0).al(0.0),
+      ];
+      canvas.drawPath(
+        cone,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: coneC,
+          ).createShader(Rect.fromLTWH(0, 0, w, h)),
+      );
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(lampX, h * 0.078),
+          width: w * 0.05,
+          height: h * 0.014,
+        ),
+        Paint()
+          ..color = const Color(0xFFFFE9A0).al(0.9 * flick)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+      );
     }
     _poster(canvas, Rect.fromLTWH(w * 0.205, h * 0.14, w * 0.1, h * 0.17), 0);
     _poster(canvas, Rect.fromLTWH(w * 0.695, h * 0.14, w * 0.1, h * 0.17), 11);
@@ -3147,40 +4207,103 @@ class OfficeP extends CustomPainter {
       ..lineTo(w * 0.64, deskTop)
       ..lineTo(w * 0.72, h * 0.99)
       ..close();
-    canvas.drawPath(desk, Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF3A2A1C), Color(0xFF1D130B)]).createShader(Rect.fromLTWH(0, deskTop, w, h * 0.2)));
+    final deskC = [Color(0xFF3A2A1C), Color(0xFF1D130B)];
+    canvas.drawPath(
+      desk,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: deskC,
+        ).createShader(Rect.fromLTWH(0, deskTop, w, h * 0.2)),
+    );
     final monW = w * 0.15;
-    final monR = Rect.fromCenter(center: Offset(w * 0.44, h * 0.7), width: monW, height: h * 0.15);
-    canvas.drawRRect(RRect.fromRectAndRadius(monR.inflate(4), const Radius.circular(6)), Paint()..color = const Color(0xFF14141E));
-    canvas.drawRRect(RRect.fromRectAndRadius(monR, const Radius.circular(4)), Paint()..color = vf.black ? const Color(0xFF050508) : const Color(0xFF062511));
+    final monR = Rect.fromCenter(
+      center: Offset(w * 0.44, h * 0.7),
+      width: monW,
+      height: h * 0.15,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(monR.inflate(4), const Radius.circular(6)),
+      Paint()..color = const Color(0xFF14141E),
+    );
+    final monCol = vf.black ? const Color(0xFF050508) : const Color(0xFF062511);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(monR, const Radius.circular(4)),
+      Paint()..color = monCol,
+    );
     if (!vf.black) {
       for (int i = 0; i < 8; i++) {
-        canvas.drawLine(Offset(monR.left + 4, monR.top + 6 + i * (monR.height - 12) / 8), Offset(monR.right - 4, monR.top + 6 + i * (monR.height - 12) / 8), Paint()..color = const Color(0xFF1DFF6E).al(0.14));
+        final y = monR.top + 6 + i * (monR.height - 12) / 8;
+        canvas.drawLine(
+          Offset(monR.left + 4, y),
+          Offset(monR.right - 4, y),
+          Paint()..color = const Color(0xFF1DFF6E).al(0.14),
+        );
       }
-      if ((t % 1) < 0.5) canvas.drawRect(Rect.fromLTWH(monR.center.dx + monW * 0.3, monR.top + 6, 4, 8), Paint()..color = const Color(0xFF57FF8F));
+      if ((t % 1) < 0.5) {
+        canvas.drawRect(
+          Rect.fromLTWH(monR.center.dx + monW * 0.3, monR.top + 6, 4, 8),
+          Paint()..color = const Color(0xFF57FF8F),
+        );
+      }
     }
-    canvas.drawRect(Rect.fromLTWH(monR.center.dx - 5, monR.bottom + 4, 10, h * 0.045), Paint()..color = const Color(0xFF14141E));
+    canvas.drawRect(
+      Rect.fromLTWH(monR.center.dx - 5, monR.bottom + 4, 10, h * 0.045),
+      Paint()..color = const Color(0xFF14141E),
+    );
     final fx = w * 0.62;
     final fy = h * 0.72;
     final fr = h * 0.05;
-    canvas.drawRect(Rect.fromLTWH(fx - fr * 0.2, fy + fr, fr * 0.4, h * 0.05), Paint()..color = const Color(0xFF222230));
+    canvas.drawRect(
+      Rect.fromLTWH(fx - fr * 0.2, fy + fr, fr * 0.4, h * 0.05),
+      Paint()..color = const Color(0xFF222230),
+    );
     canvas.save();
     canvas.translate(fx, fy);
     canvas.rotate(fanA);
     for (int i = 0; i < 3; i++) {
       canvas.rotate(2 * m.pi / 3);
-      canvas.drawOval(Rect.fromCenter(center: Offset(fr * 0.45, 0), width: fr * 0.85, height: fr * 0.3), Paint()..color = const Color(0xFF8899AA).al(vf.black ? 0.25 : 0.8));
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(fr * 0.45, 0),
+          width: fr * 0.85,
+          height: fr * 0.3,
+        ),
+        Paint()..color = const Color(0xFF8899AA).al(vf.black ? 0.25 : 0.8),
+      );
     }
     canvas.restore();
-    canvas.drawCircle(Offset(fx, fy), fr, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.5..color = const Color(0xFF556677));
-    canvas.drawCircle(Offset(fx, fy), fr * 0.16, Paint()..color = const Color(0xFF334455));
+    canvas.drawCircle(
+      Offset(fx, fy),
+      fr,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..color = const Color(0xFF556677),
+    );
+    canvas.drawCircle(
+      Offset(fx, fy),
+      fr * 0.16,
+      Paint()..color = const Color(0xFF334455),
+    );
     if (vf.black) {
-      canvas.drawRect(Offset.zero & size, Paint()..color = Colors.black.al(0.86 + 0.04 * m.sin(t * 3)));
+      canvas.drawRect(
+        Offset.zero & size,
+        Paint()..color = Colors.black.al(0.86 + 0.04 * m.sin(t * 3)),
+      );
       if (vf.thL >= 0 || vf.thR >= 0) {
         if (r.nextDouble() < 0.4) {
           final side = vf.thL >= 0 ? -1.0 : 1.0;
           final ex = w * 0.5 + side * w * 0.4;
           for (final d2 in [-1.0, 1.0]) {
-            canvas.drawCircle(Offset(ex + d2 * w * 0.012, h * 0.45), 3, Paint()..color = Colors.white.al(0.8)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+            canvas.drawCircle(
+              Offset(ex + d2 * w * 0.012, h * 0.45),
+              3,
+              Paint()
+                ..color = Colors.white.al(0.8)
+                ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+            );
           }
         }
       }
@@ -3192,11 +4315,26 @@ class OfficeP extends CustomPainter {
     canvas.drawRect(r2.deflate(3), Paint()..color = const Color(0xFF31204A));
     final c = Offset(r2.center.dx, r2.center.dy - r2.height * 0.1);
     final s = r2.height * 0.5;
-    canvas.drawCircle(Offset(c.dx - s * 0.22, c.dy - s * 0.3), s * 0.14, Paint()..color = CHARS[ch].color.al(0.9));
-    canvas.drawCircle(Offset(c.dx + s * 0.22, c.dy - s * 0.3), s * 0.14, Paint()..color = CHARS[ch].color.al(0.9));
-    canvas.drawOval(Rect.fromCenter(center: c, width: s * 0.7, height: s * 0.6), Paint()..color = CHARS[ch].color);
+    canvas.drawCircle(
+      Offset(c.dx - s * 0.22, c.dy - s * 0.3),
+      s * 0.14,
+      Paint()..color = CHARS[ch].color.al(0.9),
+    );
+    canvas.drawCircle(
+      Offset(c.dx + s * 0.22, c.dy - s * 0.3),
+      s * 0.14,
+      Paint()..color = CHARS[ch].color.al(0.9),
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: c, width: s * 0.7, height: s * 0.6),
+      Paint()..color = CHARS[ch].color,
+    );
     for (final d2 in [-1.0, 1.0]) {
-      canvas.drawCircle(Offset(c.dx + d2 * s * 0.14, c.dy - s * 0.05), s * 0.06, Paint()..color = Colors.white);
+      canvas.drawCircle(
+        Offset(c.dx + d2 * s * 0.14, c.dy - s * 0.05),
+        s * 0.06,
+        Paint()..color = Colors.white,
+      );
     }
   }
 
@@ -3208,35 +4346,103 @@ class OfficeP extends CustomPainter {
     final x0 = left ? w * 0.03 : w - w * 0.03 - opW;
     final op = Rect.fromLTWH(x0, h * 0.16, opW, opH);
     canvas.drawRect(op.inflate(6), Paint()..color = const Color(0xFF2A2438));
-    canvas.drawRect(op, Paint()..shader = const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF02020A), Color(0xFF000000)]).createShader(op));
+    const doorC = [Color(0xFF02020A), Color(0xFF000000)];
+    canvas.drawRect(
+      op,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: doorC,
+        ).createShader(op),
+    );
     final threat = left ? vf.thL : vf.thR;
     final wait = left ? vf.waitL : vf.waitR;
     if (vf.light && !vf.black) {
-      canvas.drawRect(op, Paint()..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [const Color(0xFFFFE9A0).al(0.02), const Color(0xFFFFE9A0).al(0.2)]).createShader(op));
+      final lightC = [
+        const Color(0xFFFFE9A0).al(0.02),
+        const Color(0xFFFFE9A0).al(0.2),
+      ];
+      canvas.drawRect(
+        op,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: lightC,
+          ).createShader(op),
+      );
       if (threat >= 0) {
-        drawAnimatronic(canvas, Offset(op.center.dx, op.bottom - opH * 0.32), opH * 0.62, threat, t, dark: true);
+        drawAnimatronic(
+          canvas,
+          Offset(op.center.dx, op.bottom - opH * 0.32),
+          opH * 0.62,
+          threat,
+          t,
+          dark: true,
+        );
       }
     }
     if (wait > 0.5 && closedFrac < 0.5) {
-      final a = (wait / 5).clamp(0.0, 1.0) * (0.35 + 0.3 * m.sin(t * 8).abs());
-      canvas.drawRect(op.inflate(5), Paint()..style = PaintingStyle.stroke..strokeWidth = 4..color = Colors.red.al(a));
+      final a = (wait / 5).clamp(0.0, 1.0) *
+          (0.35 + 0.3 * m.sin(t * 8).abs());
+      canvas.drawRect(
+        op.inflate(5),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4
+          ..color = Colors.red.al(a),
+      );
     }
     if (closedFrac > 0.02) {
       final ph = opH * closedFrac;
       final panel = Rect.fromLTWH(op.left, op.top, opW, ph);
-      canvas.drawRect(panel, Paint()..shader = const LinearGradient(begin: Alignment.centerLeft, end: Alignment.centerRight, colors: [Color(0xFF39424F), Color(0xFF697786), Color(0xFF39424F)]).createShader(panel));
+      const panelC = [
+        Color(0xFF39424F), Color(0xFF697786), Color(0xFF39424F)
+      ];
+      canvas.drawRect(
+        panel,
+        Paint()
+          ..shader = const LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: panelC,
+          ).createShader(panel),
+      );
       for (int i = 0; i < 6; i++) {
-        canvas.drawLine(Offset(op.left, op.top + ph * i / 6), Offset(op.right, op.top + ph * i / 6), Paint()..color = Colors.black.al(0.25)..strokeWidth = 1.5);
+        final y = op.top + ph * i / 6;
+        canvas.drawLine(
+          Offset(op.left, y),
+          Offset(op.right, y),
+          Paint()..color = Colors.black.al(0.25)..strokeWidth = 1.5,
+        );
       }
       final by = op.top + ph;
       const seg = 12.0;
       for (double sx = op.left; sx < op.right; sx += seg) {
         final idx = ((sx - op.left) / seg).toInt();
-        canvas.drawRect(Rect.fromLTWH(sx, by - 8, m.min(seg, op.right - sx), 8), Paint()..color = idx.isEven ? const Color(0xFFE8B93C) : const Color(0xFF141414));
+        final sw = m.min(seg, op.right - sx);
+        final col = idx.isEven
+            ? const Color(0xFFE8B93C)
+            : const Color(0xFF141414);
+        canvas.drawRect(Rect.fromLTWH(sx, by - 8, sw, 8),
+            Paint()..color = col);
       }
     }
-    final lampC = Offset(left ? op.right + 10 : op.left - 10, op.top - 8);
-    canvas.drawCircle(lampC, 5, Paint()..color = (closedFrac > 0.5 ? const Color(0xFFFF3B3B) : const Color(0xFF3BFF6E))..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
+    final lampC = Offset(
+      left ? op.right + 10 : op.left - 10,
+      op.top - 8,
+    );
+    final lampCol = closedFrac > 0.5
+        ? const Color(0xFFFF3B3B)
+        : const Color(0xFF3BFF6E);
+    canvas.drawCircle(
+      lampC,
+      5,
+      Paint()
+        ..color = lampCol
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+    );
   }
 
   @override
@@ -3250,16 +4456,29 @@ class MapP extends CustomPainter {
   final bool jam;
   final int myPid;
   final double t;
-  MapP({required this.map, required this.vf, required this.camMode, required this.myPid, required this.t, required this.jam});
+  MapP({
+    required this.map,
+    required this.vf,
+    required this.camMode,
+    required this.myPid,
+    required this.t,
+    required this.jam,
+  });
 
-  Offset sc(Offset c, Offset p, double s) => c + Offset((p.dx - 500) * s, (p.dy - 500) * s);
+  Offset sc(Offset c, Offset p, double s) {
+    return c + Offset((p.dx - 500) * s, (p.dy - 500) * s);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = camMode ? const Color(0xFF020A06) : const Color(0xFF070711));
+    final bg = camMode ? const Color(0xFF020A06) : const Color(0xFF070711);
+    canvas.drawRect(Offset.zero & size, Paint()..color = bg);
     final s = m.min(size.width, size.height) / 1000 * 0.92;
     final c = Offset(size.width / 2, size.height / 2);
-    final pos = <String, Offset>{for (final n in map.nodes) n.id: sc(c, Offset(n.x, n.y), s)};
+    final pos = <String, Offset>{};
+    for (final n in map.nodes) {
+      pos[n.id] = sc(c, Offset(n.x, n.y), s);
+    }
     final corridor = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 86 * s
@@ -3285,63 +4504,149 @@ class MapP extends CustomPainter {
       final p2 = pos[e.b]!;
       if (e.kind == 'vent') {
         final open = vf.vent;
-        final dashP = _dash(Path()..moveTo(p1.dx, p1.dy)..lineTo(p2.dx, p2.dy), 14 * s);
-        canvas.drawPath(dashP, Paint()..style = PaintingStyle.stroke..strokeWidth = 20 * s..strokeCap = StrokeCap.round..color = (open ? const Color(0xFF1ABC9C) : const Color(0xFF922B21)).al(camMode ? 0.8 : 1));
+        final dashP = _dash(
+          Path()
+            ..moveTo(p1.dx, p1.dy)
+            ..lineTo(p2.dx, p2.dy),
+          14 * s,
+        );
+        final vc = open ? const Color(0xFF1ABC9C) : const Color(0xFF922B21);
+        canvas.drawPath(
+          dashP,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 20 * s
+            ..strokeCap = StrokeCap.round
+            ..color = vc.al(camMode ? 0.8 : 1),
+        );
         final mid = (p1 + p2) / 2;
         if (!open) {
-          canvas.drawLine(mid + Offset(-12 * s, -12 * s), mid + Offset(12 * s, 12 * s), Paint()..color = Colors.red..strokeWidth = 3);
-          canvas.drawLine(mid + Offset(12 * s, -12 * s), mid + Offset(-12 * s, 12 * s), Paint()..color = Colors.red..strokeWidth = 3);
+          canvas.drawLine(
+            mid + Offset(-12 * s, -12 * s),
+            mid + Offset(12 * s, 12 * s),
+            Paint()..color = Colors.red..strokeWidth = 3,
+          );
+          canvas.drawLine(
+            mid + Offset(12 * s, -12 * s),
+            mid + Offset(-12 * s, 12 * s),
+            Paint()..color = Colors.red..strokeWidth = 3,
+          );
         }
         continue;
       }
       final open = e.kind == 'doorL' ? vf.dl : vf.dr;
       final dir = (p2 - p1);
       final doorMid = p1 + dir * 0.72;
-      canvas.drawLine(p1, p2, Paint()..style = PaintingStyle.stroke..strokeWidth = 40 * s..strokeCap = StrokeCap.round..color = (open ? const Color(0xFF1E8449) : const Color(0xFF922B21)).al(camMode ? 0.7 : 0.95));
+      final dc = open ? const Color(0xFF1E8449) : const Color(0xFF922B21);
+      canvas.drawLine(
+        p1,
+        p2,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 40 * s
+          ..strokeCap = StrokeCap.round
+          ..color = dc.al(camMode ? 0.7 : 0.95),
+      );
       final perp = Offset(-dir.dy, dir.dx);
       final pl = perp / (m.sqrt(perp.dx * perp.dx + perp.dy * perp.dy) + 0.0001);
-      canvas.drawLine(doorMid - pl * 34 * s, doorMid + pl * 34 * s, Paint()..color = open ? const Color(0xFF7CFC00) : const Color(0xFFFF4C4C)..strokeWidth = 7 * s);
+      final barCol = open ? const Color(0xFF7CFC00) : const Color(0xFFFF4C4C);
+      canvas.drawLine(
+        doorMid - pl * 34 * s,
+        doorMid + pl * 34 * s,
+        Paint()..color = barCol..strokeWidth = 7 * s,
+      );
     }
     final o = pos['O']!;
     final offR = Rect.fromCircle(center: o, radius: 74 * s);
-    canvas.drawRRect(RRect.fromRectAndRadius(offR, Radius.circular(18 * s)), Paint()..color = camMode ? const Color(0xFF0E3B22) : const Color(0xFF2C2450));
-    canvas.drawRRect(RRect.fromRectAndRadius(offR, Radius.circular(18 * s)), Paint()..style = PaintingStyle.stroke..strokeWidth = 3..color = const Color(0xFFF1C40F).al(0.7));
+    final offCol = camMode ? const Color(0xFF0E3B22) : const Color(0xFF2C2450);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(offR, Radius.circular(18 * s)),
+      Paint()..color = offCol,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(offR, Radius.circular(18 * s)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = const Color(0xFFF1C40F).al(0.7),
+    );
     for (final n in map.nodes) {
       if (n.id == 'O') continue;
       final p = pos[n.id]!;
-      canvas.drawCircle(p, 40 * s, Paint()..color = camMode ? const Color(0xFF0F3320) : const Color(0xFF2A3355));
+      final nc = camMode ? const Color(0xFF0F3320) : const Color(0xFF2A3355);
+      canvas.drawCircle(p, 40 * s, Paint()..color = nc);
     }
     for (final z in vf.noise) {
       final p = pos[z.o];
       if (p == null) continue;
       final pl = (0.6 + 0.4 * m.sin(t * 6)).clamp(0.0, 1.0);
-      canvas.drawCircle(p, 26 * s * (0.8 + 0.3 * pl), Paint()..color = const Color(0xFFF1C40F).al(0.25 * pl));
+      canvas.drawCircle(
+        p,
+        26 * s * (0.8 + 0.3 * pl),
+        Paint()..color = const Color(0xFFF1C40F).al(0.25 * pl),
+      );
     }
     if (!jam) {
       for (final a in vf.actors) {
         if (camMode && (a.hd || a.iv)) continue;
         final p = sc(c, Offset(a.x, a.y), s);
         final col = CHARS[a.ch.clamp(0, CHARS.length - 1)].color;
-        canvas.drawCircle(p, 20 * s, Paint()..color = col.al(0.5)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10));
+        canvas.drawCircle(
+          p,
+          20 * s,
+          Paint()
+            ..color = col.al(0.5)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+        );
         canvas.drawCircle(p, 14 * s, Paint()..color = col);
-        canvas.drawCircle(p, 14 * s, Paint()..style = PaintingStyle.stroke..strokeWidth = 2..color = Colors.white.al(0.7));
+        canvas.drawCircle(
+          p,
+          14 * s,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = Colors.white.al(0.7),
+        );
         if (a.pid == myPid) {
-          canvas.drawCircle(p, 22 * s, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.5..color = Colors.white);
+          canvas.drawCircle(
+            p,
+            22 * s,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2.5
+              ..color = Colors.white,
+          );
         }
         if (a.stun > 0) {
           final rr = 24 * s;
           for (int i = 0; i < 3; i++) {
             final ang = t * 4 + i * 2 * m.pi / 3;
-            canvas.drawCircle(p + Offset(m.cos(ang), m.sin(ang)) * rr, 3.5, Paint()..color = const Color(0xFFFFEE55));
+            canvas.drawCircle(
+              p + Offset(m.cos(ang), m.sin(ang)) * rr,
+              3.5,
+              Paint()..color = const Color(0xFFFFEE55),
+            );
           }
         }
         if (a.wait > 0.3) {
-          canvas.drawArc(Rect.fromCircle(center: p, radius: 26 * s), -m.pi / 2, (a.wait / 5).clamp(0.0, 1.0) * 2 * m.pi, false, Paint()..style = PaintingStyle.stroke..strokeWidth = 4..color = Colors.red.al(0.9));
+          canvas.drawArc(
+            Rect.fromCircle(center: p, radius: 26 * s),
+            -m.pi / 2,
+            (a.wait / 5).clamp(0.0, 1.0) * 2 * m.pi,
+            false,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 4
+              ..color = Colors.red.al(0.9),
+          );
         }
       }
     }
     if (camMode) {
-      canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xFF00FF66).al(0.05));
+      canvas.drawRect(
+        Offset.zero & size,
+        Paint()..color = const Color(0xFF00FF66).al(0.05),
+      );
     }
   }
 
@@ -3377,7 +4682,17 @@ class NoiseP extends CustomPainter {
     for (int i = 0; i < n; i++) {
       final a = r.nextDouble() * (jam ? 0.4 : (heavy ? 0.2 : 0.07));
       white.color = Colors.white.al(a);
-      canvas.drawRect(Rect.fromLTWH(r.nextDouble() * size.width, r.nextDouble() * size.height, r.nextDouble() * 2.2 + 0.6, r.nextDouble() < 0.12 ? 2 : 1), white);
+      final sw = r.nextDouble() * 2.2 + 0.6;
+      final sh = r.nextDouble() < 0.12 ? 2 : 1;
+      canvas.drawRect(
+        Rect.fromLTWH(
+          r.nextDouble() * size.width,
+          r.nextDouble() * size.height,
+          sw,
+          sh,
+        ),
+        white,
+      );
     }
     final scan = Paint()..color = Colors.black.al(jam ? 0.16 : 0.06);
     for (double y = 0; y < size.height; y += 3) {
@@ -3386,7 +4701,10 @@ class NoiseP extends CustomPainter {
     if (jam || (heavy && r.nextDouble() < 0.35)) {
       final by = r.nextDouble() * size.height;
       final bh = 6 + r.nextDouble() * 26;
-      canvas.drawRect(Rect.fromLTWH(0, by, size.width, bh), Paint()..color = Colors.white.al(0.08));
+      canvas.drawRect(
+        Rect.fromLTWH(0, by, size.width, bh),
+        Paint()..color = Colors.white.al(0.08),
+      );
     }
   }
 
@@ -3398,10 +4716,22 @@ class VignetteP extends CustomPainter {
   const VignetteP();
   @override
   void paint(Canvas canvas, Size size) {
-    final r2 = Rect.fromCircle(center: Offset(size.width / 2, size.height / 2), radius: size.longestSide * 0.72);
-    canvas.drawRect(Offset.zero & size, Paint()..shader = RadialGradient(colors: [Colors.transparent, Colors.black.al(0.55), Colors.black.al(0.85)], stops: const [0.55, 0.85, 1.0]).createShader(r2));
+    final r2 = Rect.fromCircle(
+      center: Offset(size.width / 2, size.height / 2),
+      radius: size.longestSide * 0.72,
+    );
+    final grad = RadialGradient(
+      colors: [
+        Colors.transparent,
+        Colors.black.al(0.55),
+        Colors.black.al(0.85),
+      ],
+      stops: const [0.55, 0.85, 1.0],
+    );
+    canvas.drawRect(Offset.zero & size, Paint()..shader = grad.createShader(r2));
   }
 
   @override
   bool shouldRepaint(VignetteP old) => false;
 }
+// DOSYA SONU
