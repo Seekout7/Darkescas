@@ -758,7 +758,7 @@ class Net extends ChangeNotifier {
         endGame('anim', 'Guvenlik baglantisi koptu', -1, -1);
       } else {
         actors.remove(pid);
-        if (actors.values.where((a) => !a.isAI).isEmpty && !actors.values.any((a) => a.pid != guardPid)) {
+        if (!actors.values.any((a) => a.pid != guardPid)) {
           endGame('guard', 'Tum animatronikler gitti', -1, -1);
         }
       }
@@ -1137,6 +1137,7 @@ class Net extends ChangeNotifier {
 
   double _len(String a, String b) => edgeLen['$a|$b'] ?? edgeLen['$b|$a'] ?? 1.0;
   String _kind(String a, String b) => edgeKind['$a|$b'] ?? edgeKind['$b|$a'] ?? '';
+  double _lerp(double a, double b, double t) => a + (b - a) * t;
 
   void _initSim(int guard, Map<String, dynamic> roles) {
     _initMapIdx();
@@ -1225,7 +1226,7 @@ class Net extends ChangeNotifier {
       }
     }
     noise.removeWhere((z) => sT > z.u);
-    _aiTick(dt);
+    _aiTick();
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     for (final a in actors.values.toList()) {
       if (!actors.containsKey(a.pid)) continue;
@@ -1396,9 +1397,10 @@ class Net extends ChangeNotifier {
     evQ.add('slam');
   }
 
-  void _aiTick(double dt) {
+  void _aiTick() {
     if (!aiMode) return;
     final aggr = [0.6, 1.0, 1.5][soloDiff.clamp(0, 2)];
+    const double dt = 0.05;
     for (final a in actors.values) {
       if (!a.isAI || a.stun > 0) continue;
       final c = CHARS[a.char];
@@ -1745,8 +1747,8 @@ class Net extends ChangeNotifier {
       if (a.eB != null) {
         final pa = nodeById[a.eA!]!;
         final pb = nodeById[a.eB!]!;
-        x = _lp(pa.x, pb.x, a.prog);
-        y = _lp(pa.y, pb.y, a.prog);
+        x = _lerp(pa.x, pb.x, a.prog);
+        y = _lerp(pa.y, pb.y, a.prog);
       } else {
         final n = nodeById[a.node]!;
         x = n.x;
@@ -1804,8 +1806,6 @@ class Net extends ChangeNotifier {
     evQ.clear();
     _bcast(snap);
   }
-
-  double _lp(double a, double b, double t) => a + (b - a) * t;
 
   double _waitAt(String node) {
     double w = 0;
@@ -1902,8 +1902,8 @@ class Net extends ChangeNotifier {
       if (a.eB != null) {
         final pa = nodeById[a.eA!]!;
         final pb = nodeById[a.eB!]!;
-        x = _lp(pa.x, pb.x, a.prog);
-        y = _lp(pa.y, pb.y, a.prog);
+        x = _lerp(pa.x, pb.x, a.prog);
+        y = _lerp(pa.y, pb.y, a.prog);
       } else {
         final n = nodeById[a.node]!;
         x = n.x;
@@ -1953,8 +1953,8 @@ class Net extends ChangeNotifier {
       double y = _d(a['y']);
       for (final p in prevList) {
         if (_i(p['i']) == pid) {
-          x = _lp(_d(p['x']), x, alpha);
-          y = _lp(_d(p['y']), y, alpha);
+          x = _lerp(_d(p['x']), x, alpha);
+          y = _lerp(_d(p['y']), y, alpha);
           break;
         }
       }
@@ -2036,8 +2036,8 @@ class Net extends ChangeNotifier {
 
   void frame(double dt) {
     fanA += dt * (black ? 1.2 : 9.0);
-    dlShow += (((dl ? 1.0 : 0.0)) - dlShow) * m.min(1.0, dt * 10);
-    drShow += (((dr ? 1.0 : 0.0)) - drShow) * m.min(1.0, dt * 10);
+    dlShow += ((dl ? 1.0 : 0.0) - dlShow) * m.min(1.0, dt * 10);
+    drShow += ((dr ? 1.0 : 0.0) - drShow) * m.min(1.0, dt * 10);
     if (jsOn) {
       jsT += dt;
       if (jsT > 2.4 && page == 3) {
@@ -2831,14 +2831,11 @@ class _EndPageState extends State<EndPage> with SingleTickerProviderStateMixin {
         surpriseOn = true;
         surpriseT = 0;
         Sfx.screamBurst();
-        if (Sfx._mobile) HapticFeedback.vibrate();
       }
     }
     if (surpriseOn) {
       surpriseT += 0.016;
-      if (surpriseT > 1.8) {
-        surpriseOn = false;
-      }
+      if (surpriseT > 1.8) surpriseOn = false;
       setState(() {});
     }
   }
@@ -2895,7 +2892,7 @@ class _EndPageState extends State<EndPage> with SingleTickerProviderStateMixin {
                       Center(
                         child: Transform.scale(
                           scale: 0.6 + surpriseT * 1.4,
-                          child: CustomPaint(size: const Size(300, 300), painter: AnimPrev(ch: gs._r.nextInt(CHARS.length))),
+                          child: CustomPaint(size: const Size(300, 300), painter: AnimPrev(ch: 11)),
                         ),
                       ),
                       Positioned.fill(child: Container(color: Colors.red.al(0.25 + 0.2 * m.sin(surpriseT * 40).abs()))),
@@ -3021,10 +3018,9 @@ class JsP extends CustomPainter {
 // ============================ ÇİZİM ============================
 void drawAnimatronic(Canvas canvas, Offset o, double s, int ch, double t, {bool dark = false, bool scream = false}) {
   final cd = CHARS[ch.clamp(0, CHARS.length - 1)];
-  Color body = dark ? const Color(0xFF0A0A10) : cd.color;
-  Color body2 = dark ? const Color(0xFF0A0A10) : Color.lerp(cd.color, Colors.black, 0.35)!;
-  Color eye = dark ? const Color(0xFFFFFFFF) : const Color(0xFFEAF7FF);
-  if (ch == 5) eye = const Color(0xFFFFF6B0);
+  final Color body = dark ? const Color(0xFF0A0A10) : cd.color;
+  final Color body2 = dark ? const Color(0xFF0A0A10) : Color.lerp(cd.color, Colors.black, 0.35)!;
+  final Color eye = dark ? const Color(0xFFFFFFFF) : (ch == 5 ? const Color(0xFFFFF6B0) : const Color(0xFFEAF7FF));
   final glow = Paint()..color = cd.color.al(dark ? 0.25 : 0.5)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
   canvas.drawCircle(o, s * 0.52, glow);
   if (ch == 0) {
@@ -3040,7 +3036,7 @@ void drawAnimatronic(Canvas canvas, Offset o, double s, int ch, double t, {bool 
   }
   if (ch == 10) {
     for (int i = 0; i < 3; i++) {
-      canvas.drawOval(Rect.fromCircle(center: Offset(o.dx + (i - 1) * s * 0.16, o.dy + s * (0.52 + i * 0.05)), width: s * 0.3, height: s * 0.16), Paint()..color = body.al(0.25 - i * 0.06));
+      canvas.drawOval(Rect.fromCenter(center: Offset(o.dx + (i - 1) * s * 0.16, o.dy + s * (0.52 + i * 0.05)), width: s * 0.3, height: s * 0.16), Paint()..color = body.al(0.25 - i * 0.06));
     }
   }
   canvas.drawOval(Rect.fromCenter(center: Offset(o.dx, o.dy + s * 0.32), width: s * 0.6, height: s * 0.52), Paint()..color = body2);
@@ -3142,8 +3138,8 @@ class OfficeP extends CustomPainter {
     }
     _poster(canvas, Rect.fromLTWH(w * 0.205, h * 0.14, w * 0.1, h * 0.17), 0);
     _poster(canvas, Rect.fromLTWH(w * 0.695, h * 0.14, w * 0.1, h * 0.17), 11);
-    _doorway(canvas, size, true, 1 - dlShow, vf);
-    _doorway(canvas, size, false, 1 - drShow, vf);
+    _doorway(canvas, size, true, 1 - dlShow);
+    _doorway(canvas, size, false, 1 - drShow);
     final deskTop = h * 0.8;
     final desk = Path()
       ..moveTo(w * 0.28, h * 0.99)
@@ -3204,7 +3200,7 @@ class OfficeP extends CustomPainter {
     }
   }
 
-  void _doorway(Canvas canvas, Size size, bool left, double closedFrac, VF vf) {
+  void _doorway(Canvas canvas, Size size, bool left, double closedFrac) {
     final w = size.width;
     final h = size.height;
     final opW = w * 0.145;
